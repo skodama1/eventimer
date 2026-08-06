@@ -37,7 +37,6 @@
             align-items: center;
         }
 
-        /* プレゼンテーション/全画面モード専用のスタイル */
         body.presentation-body {
             padding: 0 !important;
             overflow: hidden !important;
@@ -92,18 +91,11 @@
             justify-content: center !important;
             align-items: center !important;
             box-sizing: border-box !important;
-            padding: 5vh 5vw !important;
+            padding: 4vh 4vw !important;
             margin: 0 !important;
             border: none !important;
             border-radius: 0 !important;
             overflow: hidden;
-        }
-
-        .timer-display.presentation-fullscreen.hide-cursor {
-            cursor: none !important;
-        }
-        .timer-display.presentation-fullscreen.hide-cursor * {
-            cursor: none !important;
         }
 
         .schedule-name-display {
@@ -114,9 +106,9 @@
             order: 7;
         }
         .timer-display.presentation-fullscreen .schedule-name-display {
-            font-size: 2.0rem;
+            font-size: 1.8rem;
             color: #aaaaaa;
-            margin-top: 2.5vh;
+            margin-top: 2vh;
             margin-bottom: 0;
             order: 5;
         }
@@ -131,8 +123,8 @@
             order: 2; 
         }
         .timer-display.presentation-fullscreen .top-info {
-            font-size: 3.8rem;
-            margin-bottom: 3vh;
+            font-size: 3rem;
+            margin-bottom: 2vh;
             opacity: 0.9;
         }
 
@@ -144,7 +136,7 @@
             order: 3;
         }
         .timer-display.presentation-fullscreen .current-title {
-            font-size: 4.5rem;
+            font-size: 3.5rem;
             margin-bottom: 1vh;
         }
 
@@ -158,13 +150,9 @@
             order: 4;
             width: 100%;
             white-space: nowrap;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            backface-visibility: hidden;
-            transform: translateZ(0);
         }
         .timer-display.presentation-fullscreen .time-left {
-            font-size: 30vh;
+            font-size: 24vh;
             line-height: 1;
             margin: 2vh 0;
             text-shadow: 0 0 35px rgba(0, 255, 0, 0.8);
@@ -175,9 +163,6 @@
             text-shadow: 0 0 12px rgba(255, 51, 51, 0.6) !important;
             animation: blink 1s step-end infinite;
         }
-        .timer-display.presentation-fullscreen .time-left.alert-mode {
-            text-shadow: 0 0 35px rgba(255, 51, 51, 0.9) !important;
-        }
 
         @keyframes blink {
             50% { opacity: 0.3; }
@@ -186,10 +171,6 @@
         .sec-red {
             font-size: 0.7em;
             color: #ff3333;
-            text-shadow: 0 0 12px rgba(255, 51, 51, 0.5);
-        }
-        .timer-display.presentation-fullscreen .sec-red {
-            text-shadow: 0 0 35px rgba(255, 51, 51, 0.8);
         }
 
         .next-title {
@@ -198,7 +179,7 @@
             order: 5;
         }
         .timer-display.presentation-fullscreen .next-title {
-            font-size: 2.5rem;
+            font-size: 2rem;
             color: #555555;
             margin-top: 2vh;
             order: 4;
@@ -212,7 +193,6 @@
             min-height: 38px;
             order: 6;
         }
-        /* モバイル全画面モード時はコントローラを隠す */
         .timer-display.presentation-fullscreen .controls,
         .timer-display.presentation-fullscreen .fullscreen-btn {
             display: none !important;
@@ -226,34 +206,22 @@
             border: 1px solid var(--btn-border);
             border-radius: 4px;
             cursor: pointer;
-            transition: all 0.2s;
             -webkit-appearance: none; 
         }
-        button:hover {
-            background-color: var(--btn-hover);
-            color: #ffffff;
-            border-color: #666666;
-        }
-        button:disabled {
-            background-color: #0a0a0a;
-            border-color: #1a1a1a;
-            color: #333333;
-            cursor: not-allowed;
-        }
+        button:hover { background-color: var(--btn-hover); color: #ffffff; }
 
         .form-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 5px; }
-        .form-row .form-group { display: flex; flex-direction: column; gap: 5px; }
-        .form-row .form-group.flex-grow { flex: 1; min-width: 180px; }
+        .form-group { display: flex; flex-direction: column; gap: 5px; }
+        .form-group.flex-grow { flex: 1; min-width: 180px; }
         label { font-size: 0.8rem; color: #666666; }
         input[type="time"], input[type="text"], input[type="number"], select { background-color: #161616; border: 1px solid #333; border-radius: 4px; color: #999999; padding: 8px; font-size: 0.9rem; font-family: monospace; box-sizing: border-box; -webkit-appearance: none; }
         input[type="text"], select { font-family: sans-serif; }
-        input:focus, select:focus { outline: none; border-color: #555555; color: #ffffff; }
+        input:focus, select:focus { outline: none; border-color: #555; color: #fff; }
         input[type="number"] { width: 90px; }
         
         .table-list { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9rem; }
         .table-list th, .table-list td { border: 1px solid var(--table-border); padding: 10px; text-align: left; }
         .table-list th { background-color: #161616; color: #888888; }
-        
         .active-row { background-color: #1a252f !important; color: #ffffff; border-left: 4px solid var(--accent-color); }
         .storage-zone { padding-bottom: 15px; margin-bottom: 15px; border-bottom: 1px dashed var(--table-border); display: flex; flex-wrap: wrap; gap: 15px; align-items: center; }
 
@@ -261,33 +229,19 @@
         .inline-edit-num { width: 70px !important; }
         .insert-row { background-color: #1e1e1e !important; border-left: 4px solid #00ffff; }
 
-        /* モバイル端末向けの画面タップで全画面解除（復帰）用トグルボタン */
+        /* モバイル端末向けの画面タップで設定に戻るボタン */
         #mobile-exit-btn {
             display: none;
             position: fixed;
             top: 15px;
             right: 15px;
             z-index: 10000;
-            background: rgba(50,50,50,0.8);
+            background: rgba(50,50,50,0.9);
             color: #fff;
             border: 1px solid #777;
             padding: 8px 14px;
             border-radius: 4px;
             font-size: 0.85rem;
-        }
-
-        @media (max-height: 440px) and (orientation: landscape) {
-            .timer-display.presentation-fullscreen { padding: 2vh 6vw !important; }
-            .timer-display.presentation-fullscreen .schedule-name-display { font-size: 1.2rem !important; margin-top: 1vh !important; }
-            .timer-display.presentation-fullscreen .top-info { font-size: 1.6rem !important; margin-bottom: 1vh !important; }
-            .timer-display.presentation-fullscreen .current-title { font-size: 2.0rem !important; margin-bottom: 0 !important; }
-            .timer-display.presentation-fullscreen .time-left { font-size: 38vh !important; margin: 0 !important; }
-            .timer-display.presentation-fullscreen .next-title { font-size: 1.3rem !important; margin-top: 1vh !important; }
-        }
-
-        @media (max-width: 480px) and (orientation: portrait) {
-            .timer-display.presentation-fullscreen { padding: 6vh 4vw !important; justify-content: center !important; }
-            .timer-display.presentation-fullscreen .time-left { font-size: 17vw !important; margin: 4vh 0 !important; }
         }
     </style>
 </head>
@@ -296,7 +250,6 @@
 <button id="mobile-exit-btn" onclick="toggleMobileFullscreen(false)">設定に戻る</button>
 
 <script>
-    // デバイス判定（iPad, iPhone, Androidなど）
     function isMobileDevice() {
         return /Mobi|Android|iPhone|iPad|iPod/.test(navigator.userAgent) || 
                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -328,12 +281,11 @@
     }
 </script>
 
-<!-- コントロールパネル側（通常モニター用）のHTML -->
 <div class="container" id="main-container-wrapper">
     <h1 id="main-app-title">⏱️ PROGRAM TIMER</h1>
 
     <div id="timer-area" class="card timer-display">
-        <button id="main-fullscreen-btn" class="fullscreen-btn" onclick="handleFullscreenAction()">🗖 別モニター全画面</button>
+        <button id="main-fullscreen-btn" class="fullscreen-btn" onclick="handleFullscreenAction()">🗖 全画面表示</button>
         
         <div id="top-info" class="top-info"></div>
         <div id="current-title" class="current-title">プログラムが登録されていません</div>
@@ -425,7 +377,6 @@
     let isPaused = false;
     let dayOffset = 0; 
     let pauseStartTime = null; 
-    let mouseTimer = null;
     let presentationWindow = null;
     let lastSyncedStateString = "";
 
@@ -451,13 +402,6 @@
             { duration: 5, title: "休み時間", sound: false, alertMin: 2 },
             { duration: 10, title: "帰会", sound: false, alertMin: 0 }
         ]
-    };
-
-    const defaultPresetTimetables = {
-        "6時間｜清掃なし": {
-            baseStartTimeStr: "07:30",
-            timetableRaw: defaultSampleData.timetableRaw
-        }
     };
 
     let audioCtx = null;
@@ -495,26 +439,10 @@
     }
     setInterval(updateClock, 1000);
 
-    function resetMouseTimer() {
-        const timerArea = document.getElementById('timer-area');
-        if (!timerArea || !timerArea.classList.contains('presentation-fullscreen')) return;
-        timerArea.classList.remove('hide-cursor');
-        if (mouseTimer) clearTimeout(mouseTimer);
-        mouseTimer = setTimeout(() => {
-            if (timerArea.classList.contains('presentation-fullscreen')) {
-                timerArea.classList.add('hide-cursor');
-            }
-        }, 2500);
-    }
-    document.addEventListener('mousemove', resetMouseTimer);
-
-    // デバイスに応じて挙動を自動分岐
     async function handleFullscreenAction() {
         if (isMobile) {
-            // モバイル（iPad/iPhone等）の場合は、画面内で全画面表示モードにする
             toggleMobileFullscreen(true);
         } else {
-            // PCの場合は別モニターウィンドウを開く
             if (presentationWindow && !presentationWindow.closed) {
                 presentationWindow.close();
                 presentationWindow = null;
@@ -541,10 +469,6 @@
             }
 
             presentationWindow = window.open(currentUrl, 'PresentationTimer', `width=1024,height=768,left=${left},top=${top}`);
-
-            if (!presentationWindow) {
-                alert('ポップアップがブロックされました。ブラウザの設定でポップアップを許可してください。');
-            }
         }
     }
 
@@ -771,8 +695,7 @@
         const row = document.getElementById(`insert-row-${index}`);
         const title = row.querySelector('.inline-insert-title').value.trim();
         const duration = parseInt(row.querySelector('.inline-insert-duration').value, 10);
-        let alertMin = parseInt(row.querySelector('.inline-insert-alert').value, 10);
-        if (isNaN(alertMin) || alertMin < 0) alertMin = 0;
+        let alertMin = 0;
 
         if (!title || isNaN(duration) || duration <= 0) {
             alert('プログラム名と所要時間を正しく入力してください。');
@@ -1025,7 +948,7 @@
         }
         
         const next = timetableParsed[currentIndex + 1];
-        document.getElementById('next-title').textContent = next ? `次：${next.title} (${next.startStr}〜)` : '次：なし（終了後に翌日ループ）';
+        document.getElementById('next-title').textContent = next ? `次：${next.title} (${next.startStr}〜)` : '次：なし';
 
         if (!isPresentationMode) {
             const btnStart = document.getElementById('btn-start');
@@ -1061,7 +984,6 @@
         }
     }
 
-    // プレゼンテーションモード（別ウィンドウ）用のループ
     if (isPresentationMode) {
         let remoteData = initialSyncData;
 
@@ -1090,6 +1012,8 @@
             const nextTitleEl = document.getElementById('next-title');
             const scheduleNameEl = document.getElementById('schedule-name');
 
+            if (!topInfoEl || !currentTitleEl || !timeEl) return;
+
             const topInfoStr = `${year}/${month}/${date}(${day}) ${hours}:${minutes}`;
             if (topInfoEl.textContent !== topInfoStr) topInfoEl.textContent = topInfoStr;
 
@@ -1115,7 +1039,7 @@
                     timeEl.textContent = timeStr;
                 }
 
-                const alertSec = remoteData.alertMin * 60;
+                const alertSec = (remoteData.alertMin || 0) * 60;
                 if (diffSec <= alertSec && alertSec > 0) {
                     if (!timeEl.classList.contains('alert-mode')) timeEl.classList.add('alert-mode');
                 } else {
@@ -1257,7 +1181,7 @@
 
         let savedData = JSON.parse(localStorage.getItem('saved_timetables') || '{}');
         if (!savedData["6時間｜清掃なし"]) {
-            savedData["6時間｜清掃なし"] = defaultPresetTimetables["6時間｜清掃なし"];
+            savedData["6時間｜清掃なし"] = defaultSampleData;
             localStorage.setItem('saved_timetables', JSON.stringify(savedData));
         }
 
