@@ -6,6 +6,7 @@
     <title>イベントプログラムタイマー</title>
     
     <meta name="apple-mobile-web-app-title" content="ProTimer">
+    
     <link rel="apple-touch-icon" href="https://drive.google.com/uc?export=view&id=1GX6rNN9sU3XtTOcfncRZedDXnRqQsyDC">
 
     <style>
@@ -14,15 +15,16 @@
             --card-bg: #121212; 
             --text-color: #aaaaaa; 
             --title-color: #ffffff;
-            --accent-color: #00ff00; 
-            --alert-color: #ff3333;  
-            --clock-color: #00ffff;  
+            --accent-color: #00ff00; /* 蛍光グリーン */
+            --alert-color: #ff3333;  /* 警告レッド */
+            --clock-color: #00ffff;  /* シアン */
             
             --btn-bg: #222222;
             --btn-text: #888888;
             --btn-hover: #333333;
             --btn-border: #444444;
 
+            /* 表の枠線用カラー */
             --table-border: #383838;
         }
 
@@ -37,10 +39,8 @@
             align-items: center;
         }
 
-        body.presentation-body {
-            padding: 0 !important;
+        body:has(.ios-fullscreen) {
             overflow: hidden !important;
-            background-color: #000000 !important;
         }
 
         .container {
@@ -64,6 +64,7 @@
             position: relative;
         }
 
+        /* タイマー表示部分（上部固定化） */
         .timer-display {
             text-align: center;
             padding: 30px 20px;
@@ -71,14 +72,16 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+
+            /* 📌 スクロール時もタイマーを画面上部に固定 */
             position: sticky;
             top: 0;
             z-index: 100;
             background: var(--card-bg);
         }
 
-        /* プレゼンテーションモード時またはスマホ全画面時のレイアウト */
-        .timer-display.presentation-fullscreen {
+        /* 疑似フルスクリーンクラス */
+        .timer-display.ios-fullscreen {
             position: fixed !important;
             top: 0 !important;
             left: 0 !important;
@@ -91,13 +94,22 @@
             justify-content: center !important;
             align-items: center !important;
             box-sizing: border-box !important;
-            padding: 4vh 4vw !important;
+            padding: 5vh 5vw !important;
             margin: 0 !important;
             border: none !important;
             border-radius: 0 !important;
             overflow: hidden;
         }
 
+        /* 全画面表示時にマウスカーソルを非表示にするクラス */
+        .timer-display.ios-fullscreen.hide-cursor {
+            cursor: none !important;
+        }
+        .timer-display.ios-fullscreen.hide-cursor * {
+            cursor: none !important;
+        }
+
+        /* スケジュール名表示用スタイル */
         .schedule-name-display {
             font-size: 0.9rem;
             color: #888888;
@@ -105,14 +117,14 @@
             font-weight: bold;
             order: 7;
         }
-        .timer-display.presentation-fullscreen .schedule-name-display {
-            font-size: 1.8rem;
+        .timer-display.ios-fullscreen .schedule-name-display {
+            font-size: 2.0rem;
             color: #aaaaaa;
-            margin-top: 2vh;
+            margin-top: 2.5vh;
             margin-bottom: 0;
-            order: 5;
         }
 
+        /* 日付・時刻共通スタイル */
         .top-info {
             font-size: 1.2rem;
             color: var(--clock-color);
@@ -122,12 +134,13 @@
             letter-spacing: 2px;
             order: 2; 
         }
-        .timer-display.presentation-fullscreen .top-info {
-            font-size: 3rem;
-            margin-bottom: 2vh;
+        .timer-display.ios-fullscreen .top-info {
+            font-size: 3.8rem;
+            margin-bottom: 3vh;
             opacity: 0.9;
         }
 
+        /* プログラムタイトル */
         .current-title {
             font-size: 1.8rem;
             font-weight: bold;
@@ -135,11 +148,12 @@
             color: var(--title-color);
             order: 3;
         }
-        .timer-display.presentation-fullscreen .current-title {
-            font-size: 3.5rem;
+        .timer-display.ios-fullscreen .current-title {
+            font-size: 4.5rem;
             margin-bottom: 1vh;
         }
 
+        /* タイマー数字 */
         .time-left {
             font-size: 5.5rem;
             font-weight: bold;
@@ -151,17 +165,21 @@
             width: 100%;
             white-space: nowrap;
         }
-        .timer-display.presentation-fullscreen .time-left {
-            font-size: 24vh;
+        .timer-display.ios-fullscreen .time-left {
+            font-size: 32vh;
             line-height: 1;
             margin: 2vh 0;
             text-shadow: 0 0 35px rgba(0, 255, 0, 0.8);
         }
 
+        /* アラート状態のスタイル */
         .time-left.alert-mode {
             color: var(--alert-color) !important;
             text-shadow: 0 0 12px rgba(255, 51, 51, 0.6) !important;
             animation: blink 1s step-end infinite;
+        }
+        .timer-display.ios-fullscreen .time-left.alert-mode {
+            text-shadow: 0 0 35px rgba(255, 51, 51, 0.9) !important;
         }
 
         @keyframes blink {
@@ -171,6 +189,10 @@
         .sec-red {
             font-size: 0.7em;
             color: #ff3333;
+            text-shadow: 0 0 12px rgba(255, 51, 51, 0.5);
+        }
+        .timer-display.ios-fullscreen .sec-red {
+            text-shadow: 0 0 35px rgba(255, 51, 51, 0.8);
         }
 
         .next-title {
@@ -178,11 +200,10 @@
             color: #666666;
             order: 5;
         }
-        .timer-display.presentation-fullscreen .next-title {
-            font-size: 2rem;
+        .timer-display.ios-fullscreen .next-title {
+            font-size: 2.5rem;
             color: #555555;
             margin-top: 2vh;
-            order: 4;
         }
 
         .controls {
@@ -193,10 +214,6 @@
             min-height: 38px;
             order: 6;
         }
-        .timer-display.presentation-fullscreen .controls,
-        .timer-display.presentation-fullscreen .fullscreen-btn {
-            display: none !important;
-        }
 
         button {
             padding: 8px 16px;
@@ -206,22 +223,54 @@
             border: 1px solid var(--btn-border);
             border-radius: 4px;
             cursor: pointer;
+            transition: all 0.2s;
             -webkit-appearance: none; 
         }
-        button:hover { background-color: var(--btn-hover); color: #ffffff; }
+        button:hover {
+            background-color: var(--btn-hover);
+            color: #ffffff;
+            border-color: #666666;
+        }
+        button:disabled {
+            background-color: #0a0a0a;
+            border-color: #1a1a1a;
+            color: #333333;
+            cursor: not-allowed;
+        }
 
+        .fullscreen-btn {
+            position: absolute;
+            top: 20px; 
+            right: 20px;
+            font-size: 0.8rem;
+            z-index: 10000;
+            order: 0;
+        }
+        .timer-display.ios-fullscreen .fullscreen-btn {
+            top: 20px !important;
+            right: 20px !important;
+            font-size: 1.2rem;
+            opacity: 0.4;
+            position: absolute !important;
+        }
+        .fullscreen-btn:hover {
+            opacity: 1.0;
+        }
+
+        /* タイムテーブル設定フォーム */
         .form-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 5px; }
-        .form-group { display: flex; flex-direction: column; gap: 5px; }
-        .form-group.flex-grow { flex: 1; min-width: 180px; }
+        .form-row .form-group { display: flex; flex-direction: column; gap: 5px; }
+        .form-row .form-group.flex-grow { flex: 1; min-width: 180px; }
         label { font-size: 0.8rem; color: #666666; }
         input[type="time"], input[type="text"], input[type="number"], select { background-color: #161616; border: 1px solid #333; border-radius: 4px; color: #999999; padding: 8px; font-size: 0.9rem; font-family: monospace; box-sizing: border-box; -webkit-appearance: none; }
         input[type="text"], select { font-family: sans-serif; }
-        input:focus, select:focus { outline: none; border-color: #555; color: #fff; }
+        input:focus, select:focus { outline: none; border-color: #555555; color: #ffffff; }
         input[type="number"] { width: 90px; }
         
         .table-list { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9rem; }
         .table-list th, .table-list td { border: 1px solid var(--table-border); padding: 10px; text-align: left; }
         .table-list th { background-color: #161616; color: #888888; }
+        
         .active-row { background-color: #1a252f !important; color: #ffffff; border-left: 4px solid var(--accent-color); }
         .storage-zone { padding-bottom: 15px; margin-bottom: 15px; border-bottom: 1px dashed var(--table-border); display: flex; flex-wrap: wrap; gap: 15px; align-items: center; }
 
@@ -229,67 +278,117 @@
         .inline-edit-num { width: 70px !important; }
         .insert-row { background-color: #1e1e1e !important; border-left: 4px solid #00ffff; }
 
-        /* モバイル端末向けの画面タップで設定に戻るボタン */
-        #mobile-exit-btn {
-            display: none;
-            position: fixed;
-            top: 15px;
-            right: 15px;
-            z-index: 10000;
-            background: rgba(50,50,50,0.9);
-            color: #fff;
-            border: 1px solid #777;
-            padding: 8px 14px;
-            border-radius: 4px;
-            font-size: 0.85rem;
+        /* 横画面時レスポンシブ */
+        @media (max-height: 440px) and (orientation: landscape) {
+            .timer-display.ios-fullscreen { 
+                padding: 2vh 6vw !important;
+            }
+            .timer-display.ios-fullscreen .schedule-name-display { font-size: 1.2rem !important; margin-top: 1vh !important; }
+            .timer-display.ios-fullscreen .top-info { font-size: 1.6rem !important; margin-bottom: 1vh !important; }
+            .timer-display.ios-fullscreen .current-title { font-size: 2.0rem !important; margin-bottom: 0 !important; }
+            .timer-display.ios-fullscreen .time-left { 
+                font-size: 40vh !important; 
+                margin: 0 !important; 
+            }
+            .timer-display.ios-fullscreen .next-title { font-size: 1.3rem !important; margin-top: 1vh !important; }
+            .timer-display.ios-fullscreen .fullscreen-btn { top: 8px !important; right: 8px !important; font-size: 0.8rem !important; padding: 4px 8px !important; }
+            .timer-display.ios-fullscreen .controls { margin-top: 5px !important; }
+        }
+
+        @media (max-width: 600px) {
+            .table-list { font-size: 0.75rem; }
+            .table-list th, .table-list td { padding: 6px 4px; }
+        }
+
+        /* 縦画面レスポンシブ */
+        @media (max-width: 480px) and (orientation: portrait) {
+            .timer-display:not(.ios-fullscreen) {
+                padding: 15px 10px !important;
+            }
+            .timer-display:not(.ios-fullscreen) .fullscreen-btn {
+                position: static !important;
+                margin-bottom: 15px;
+                width: auto;
+            }
+            .timer-display:not(.ios-fullscreen) .schedule-name-display {
+                font-size: 0.85rem !important;
+                margin-top: 10px !important;
+            }
+            .timer-display:not(.ios-fullscreen) .top-info {
+                font-size: 1.1rem !important;
+                letter-spacing: 1px !important;
+                margin-bottom: 8px !important;
+            }
+            .timer-display:not(.ios-fullscreen) .time-left {
+                font-size: 4.2rem !important; 
+                letter-spacing: -1px;
+            }
+            .timer-display:not(.ios-fullscreen) .sec-red {
+                font-size: 0.75em !important;
+            }
+            .timer-display:not(.ios-fullscreen) .next-title {
+                font-size: 1.0rem !important;
+            }
+
+            .timer-display.ios-fullscreen {
+                padding: 6vh 4vw !important;
+                justify-content: center !important; 
+            }
+            .timer-display.ios-fullscreen .fullscreen-btn {
+                position: absolute !important;
+                top: 20px !important;
+                right: 20px !important;
+                margin: 0 !important;
+                font-size: 0.9rem !important;
+                opacity: 0.5;
+            }
+            .timer-display.ios-fullscreen .schedule-name-display {
+                font-size: 1.4rem !important;
+                margin-top: 2vh !important;
+            }
+            .timer-display.ios-fullscreen .top-info {
+                font-size: 1.0rem !important; 
+                margin-bottom: 4vh !important;
+                letter-spacing: 1px !important;
+            }
+            .timer-display.ios-fullscreen .current-title {
+                font-size: 2.2rem !important;
+                margin-bottom: 2vh !important;
+                line-height: 1.3;
+            }
+            .timer-display.ios-fullscreen .time-left {
+                font-size: 17vw !important; 
+                margin: 4vh 0 !important;
+            }
+            .timer-display.ios-fullscreen .sec-red {
+                font-size: 0.75em !important;
+            }
+            .timer-display.ios-fullscreen .next-title {
+                font-size: 1.2rem !important; 
+                color: #555555;
+                margin-top: 4vh !important;
+                line-height: 1.4;
+            }
+            .timer-display.ios-fullscreen .controls {
+                margin-top: 3vh !important;
+            }
         }
     </style>
 </head>
-<body id="body-element">
+<body>
 
-<button id="mobile-exit-btn" onclick="toggleMobileFullscreen(false)">設定に戻る</button>
-
-<script>
-    function isMobileDevice() {
-        return /Mobi|Android|iPhone|iPad|iPod/.test(navigator.userAgent) || 
-               (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    }
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const isPresentationMode = urlParams.get('mode') === 'presentation';
-    const isMobile = isMobileDevice();
-
-    let initialSyncData = {};
-    if (isPresentationMode) {
-        document.documentElement.style.backgroundColor = "#000000";
-        try {
-            const raw = localStorage.getItem('presentation_sync_data');
-            if (raw) initialSyncData = JSON.parse(raw);
-        } catch(e) {}
-
-        document.write(`
-            <body class="presentation-body" id="body-element">
-                <div class="card timer-display presentation-fullscreen" id="timer-area">
-                    <div id="top-info" class="top-info">--/--/--( ) --:--</div>
-                    <div id="current-title" class="current-title">${initialSyncData.currentTitle || '読み込み中...'}</div>
-                    <div id="time-left" class="time-left">00:00</div>
-                    <div id="next-title" class="next-title">${initialSyncData.nextTitleText || '次：--'}</div>
-                    <div id="schedule-name" class="schedule-name-display">${initialSyncData.scheduleNameText || ''}</div>
-                </div>
-            </body>
-        `);
-    }
-</script>
-
-<div class="container" id="main-container-wrapper">
-    <h1 id="main-app-title">⏱️ PROGRAM TIMER</h1>
+<div class="container">
+    <h1>⏱️ PROGRAM TIMER</h1>
 
     <div id="timer-area" class="card timer-display">
-        <button id="main-fullscreen-btn" class="fullscreen-btn" onclick="handleFullscreenAction()">🗖 全画面表示</button>
+        <button class="fullscreen-btn" onclick="toggleFullscreen()">🗖 全画面化</button>
         
         <div id="top-info" class="top-info"></div>
+
         <div id="current-title" class="current-title">プログラムが登録されていません</div>
+
         <div id="time-left" class="time-left">00:00</div>
+        
         <div id="next-title" class="next-title">次：--</div>
 
         <div class="controls" id="timer-controls-zone">
@@ -300,7 +399,7 @@
         <div id="schedule-name" class="schedule-name-display">未選択</div>
     </div>
 
-    <div class="card" id="editor-card-zone">
+    <div class="card">
         <div class="storage-zone">
             <div class="form-group">
                 <label for="save-name">このスケジュールを保存</label>
@@ -336,8 +435,8 @@
         </table>
     </div>
 
-    <div class="card" id="add-card-zone">
-        <h3 style="color:#888; font-size:1rem; margin-top:0;">📋 新しいプログラムを追加</h3>
+    <div class="card">
+        <h3 style="color:#888; font-size:1rem; margin-top:0;">📋 新しいプログラムを追加 (末尾)</h3>
         <div class="form-row">
             <div class="form-group">
                 <label id="label-start" for="input-start">開始時刻</label>
@@ -368,6 +467,7 @@
 <script>
     let baseStartTimeStr = "08:00"; 
     let timetableRaw = [];
+    
     let timetableParsed = [];
     let currentIndex = -1;
     let editTargetIndex = -1; 
@@ -377,8 +477,8 @@
     let isPaused = false;
     let dayOffset = 0; 
     let pauseStartTime = null; 
-    let presentationWindow = null;
-    let lastSyncedStateString = "";
+
+    let mouseTimer = null;
 
     const defaultSampleData = {
         baseStartTimeStr: "07:30",
@@ -404,6 +504,126 @@
         ]
     };
 
+    const defaultPresetTimetables = {
+        "6時間｜清掃なし": {
+            baseStartTimeStr: "07:30",
+            timetableRaw: [
+                { duration: 48, title: "登校", sound: false, alertMin: 2 },
+                { duration: 7, title: "朝学習", sound: false, alertMin: 0 },
+                { duration: 5, title: "朝会", sound: false, alertMin: 0 },
+                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
+                { duration: 50, title: "1時間目", sound: false, alertMin: 0 },
+                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
+                { duration: 50, title: "2時間目", sound: false, alertMin: 0 },
+                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
+                { duration: 50, title: "3時間目", sound: false, alertMin: 0 },
+                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
+                { duration: 50, title: "4時間目", sound: false, alertMin: 0 },
+                { duration: 40, title: "給食", sound: false, alertMin: 0 },
+                { duration: 30, title: "昼休み", sound: false, alertMin: 2 },
+                { duration: 50, title: "5時間目", sound: false, alertMin: 0 },
+                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
+                { duration: 50, title: "6時間目", sound: false, alertMin: 0 },
+                { duration: 5, title: "休み時間", sound: false, alertMin: 2 },
+                { duration: 10, title: "帰会", sound: false, alertMin: 0 }
+            ]
+        },
+        "6時間｜清掃あり": {
+            baseStartTimeStr: "07:30",
+            timetableRaw: [
+                { duration: 48, title: "登校", sound: false, alertMin: 2 },
+                { duration: 7, title: "朝学習", sound: false, alertMin: 0 },
+                { duration: 5, title: "朝会", sound: false, alertMin: 0 },
+                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
+                { duration: 50, title: "1時間目", sound: false, alertMin: 0 },
+                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
+                { duration: 50, title: "2時間目", sound: false, alertMin: 0 },
+                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
+                { duration: 50, title: "3時間目", sound: false, alertMin: 0 },
+                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
+                { duration: 50, title: "4時間目", sound: false, alertMin: 0 },
+                { duration: 40, title: "給食", sound: false, alertMin: 0 },
+                { duration: 25, title: "昼休み", sound: false, alertMin: 2 },
+                { duration: 50, title: "5時間目", sound: false, alertMin: 0 },
+                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
+                { duration: 50, title: "6時間目", sound: false, alertMin: 0 },
+                { duration: 7, title: "休み時間", sound: false, alertMin: 2 },
+                { duration: 10, title: "清掃", sound: false, alertMin: 0 },
+                { duration: 8, title: "休み時間", sound: false, alertMin: 2 },
+                { duration: 10, title: "帰会", sound: false, alertMin: 0 }
+            ]
+        },
+        "6時間｜諸活動あり": {
+            baseStartTimeStr: "07:30",
+            timetableRaw: [
+                { duration: 48, title: "登校", sound: false, alertMin: 2 },
+                { duration: 7, title: "朝学習", sound: false, alertMin: 0 },
+                { duration: 5, title: "朝会", sound: false, alertMin: 0 },
+                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
+                { duration: 50, title: "1時間目", sound: false, alertMin: 0 },
+                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
+                { duration: 50, title: "2時間目", sound: false, alertMin: 0 },
+                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
+                { duration: 50, title: "3時間目", sound: false, alertMin: 0 },
+                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
+                { duration: 50, title: "4時間目", sound: false, alertMin: 0 },
+                { duration: 40, title: "給食", sound: false, alertMin: 0 },
+                { duration: 25, title: "昼休み", sound: false, alertMin: 2 },
+                { duration: 50, title: "5時間目", sound: false, alertMin: 0 },
+                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
+                { duration: 50, title: "6時間目", sound: false, alertMin: 0 },
+                { duration: 5, title: "休み時間", sound: false, alertMin: 2 },
+                { duration: 20, title: "諸活動", sound: false, alertMin: 0 },
+                { duration: 5, title: "休み時間", sound: false, alertMin: 2 },
+                { duration: 10, title: "帰会", sound: false, alertMin: 0 }
+            ]
+        },
+        "5時間": {
+            baseStartTimeStr: "07:30",
+            timetableRaw: [
+                { duration: 48, title: "登校", sound: false, alertMin: 2 },
+                { duration: 7, title: "朝学習", sound: false, alertMin: 0 },
+                { duration: 5, title: "朝会", sound: false, alertMin: 0 },
+                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
+                { duration: 50, title: "1時間目", sound: false, alertMin: 0 },
+                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
+                { duration: 50, title: "2時間目", sound: false, alertMin: 0 },
+                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
+                { duration: 50, title: "3時間目", sound: false, alertMin: 0 },
+                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
+                { duration: 50, title: "4時間目", sound: false, alertMin: 0 },
+                { duration: 40, title: "給食", sound: false, alertMin: 0 },
+                { duration: 30, title: "昼休み", sound: false, alertMin: 2 },
+                { duration: 50, title: "5時間目", sound: false, alertMin: 0 },
+                { duration: 5, title: "休み時間", sound: false, alertMin: 2 },
+                { duration: 10, title: "帰会", sound: false, alertMin: 0 }
+            ]
+        },
+        "6時間｜45分授業": {
+            baseStartTimeStr: "07:30",
+            timetableRaw: [
+                { duration: 48, title: "登校", sound: false, alertMin: 2 },
+                { duration: 7, title: "朝学習", sound: false, alertMin: 0 },
+                { duration: 5, title: "朝会", sound: false, alertMin: 0 },
+                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
+                { duration: 45, title: "1時間目", sound: false, alertMin: 0 },
+                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
+                { duration: 45, title: "2時間目", sound: false, alertMin: 0 },
+                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
+                { duration: 45, title: "3時間目", sound: false, alertMin: 0 },
+                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
+                { duration: 45, title: "4時間目", sound: false, alertMin: 0 },
+                { duration: 40, title: "給食", sound: false, alertMin: 0 },
+                { duration: 30, title: "昼休み", sound: false, alertMin: 2 },
+                { duration: 45, title: "5時間目", sound: false, alertMin: 0 },
+                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
+                { duration: 45, title: "6時間目", sound: false, alertMin: 0 },
+                { duration: 5, title: "休み時間", sound: false, alertMin: 2 },
+                { duration: 10, title: "帰会", sound: false, alertMin: 0 }
+            ]
+        }
+    };
+
     let audioCtx = null;
     function initAudio() {
         if (!audioCtx) {
@@ -415,7 +635,7 @@
     }
 
     function playBeep() {
-        if (!audioCtx || isPresentationMode) return;
+        if (!audioCtx) return;
         try {
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
@@ -426,7 +646,9 @@
             gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
             osc.start();
             osc.stop(audioCtx.currentTime + 0.5); 
-        } catch(e) {}
+        } catch(e) {
+            console.log("Audio play error:", e);
+        }
     }
 
     function updateClock() {
@@ -438,53 +660,39 @@
         }
     }
     setInterval(updateClock, 1000);
+    updateClock(); 
 
-    async function handleFullscreenAction() {
-        if (isMobile) {
-            toggleMobileFullscreen(true);
-        } else {
-            if (presentationWindow && !presentationWindow.closed) {
-                presentationWindow.close();
-                presentationWindow = null;
-                return;
+    function resetMouseTimer() {
+        const timerArea = document.getElementById('timer-area');
+        if (!timerArea.classList.contains('ios-fullscreen')) return;
+
+        timerArea.classList.remove('hide-cursor');
+
+        if (mouseTimer) clearTimeout(mouseTimer);
+
+        mouseTimer = setTimeout(() => {
+            if (timerArea.classList.contains('ios-fullscreen')) {
+                timerArea.classList.add('hide-cursor');
             }
-
-            const currentUrl = window.location.href.split('?')[0] + '?mode=presentation';
-            let left = 0;
-            let top = 0;
-            
-            if ('getScreens' in window) {
-                try {
-                    const screenDetails = await window.getScreens();
-                    if (screenDetails.screens.length > 1) {
-                        const targetScreen = screenDetails.screens.find(s => s !== screenDetails.currentScreen) || screenDetails.screens[1];
-                        left = targetScreen.availLeft;
-                        top = targetScreen.availTop;
-                    }
-                } catch (e) {
-                    left = window.screen.width;
-                }
-            } else {
-                left = window.screen.width;
-            }
-
-            presentationWindow = window.open(currentUrl, 'PresentationTimer', `width=1024,height=768,left=${left},top=${top}`);
-        }
+        }, 2500);
     }
 
-    function toggleMobileFullscreen(enable) {
-        const timerArea = document.getElementById('timer-area');
-        const exitBtn = document.getElementById('mobile-exit-btn');
-        const mainContainer = document.getElementById('main-container-wrapper');
+    document.addEventListener('mousemove', resetMouseTimer);
 
-        if (enable) {
-            timerArea.classList.add('presentation-fullscreen');
-            exitBtn.style.display = 'block';
-            mainContainer.style.display = 'none';
+    function toggleFullscreen() {
+        const timerArea = document.getElementById('timer-area');
+        const btn = document.querySelector('.fullscreen-btn');
+        
+        if (timerArea.classList.contains('ios-fullscreen')) {
+            timerArea.classList.remove('ios-fullscreen');
+            timerArea.classList.remove('hide-cursor');
+            if (mouseTimer) clearTimeout(mouseTimer);
+            btn.textContent = "🗖 全画面化";
         } else {
-            timerArea.classList.remove('presentation-fullscreen');
-            exitBtn.style.display = 'none';
-            mainContainer.style.display = 'block';
+            timerArea.classList.add('ios-fullscreen');
+            btn.textContent = "✕ 閉じる";
+            initAudio(); 
+            resetMouseTimer();
         }
     }
 
@@ -499,6 +707,7 @@
         let scheduleEndDate = new Date(currentTrackDate.getTime() + totalMinutes * 60 * 1000);
 
         dayOffset = (now >= scheduleEndDate) ? 1 : 0;
+
         currentTrackDate = timeStringToDate(baseStartTimeStr, dayOffset);
 
         timetableParsed = timetableRaw.map(item => {
@@ -517,35 +726,33 @@
             };
         });
 
-        if (!isPresentationMode) {
-            setupNextFormPlaceholder();
-        }
+        setupNextFormPlaceholder();
 
         if ((keepTimerAlive === true || keepTimerAlive === "force") && previousActiveTitle !== null) {
             const newIdx = timetableParsed.findIndex(item => item.title === previousActiveTitle);
             if (newIdx !== -1) {
                 currentIndex = newIdx; 
                 updateDisplayOnly();
-                if (!isPresentationMode) renderTimetableList();
+                renderTimetableList();
                 return; 
             }
         }
 
         autoSelectCurrentIndex();
         
-        if (!keepTimerAlive && !isPresentationMode) {
+        if (keepTimerAlive === "force") {
+            updateDisplayOnly();
+        } else if (!keepTimerAlive) {
             resetTimer();
         } else {
             updateDisplayOnly();
         }
 
-        if (!skipBackup && !isPresentationMode) {
+        if (!skipBackup) {
             saveAutoBackup();
         }
         
-        if (!isPresentationMode) {
-            renderTimetableList();
-        }
+        renderTimetableList();
     }
 
     function addMinutesToTimeStr(timeStr, minsToAdd) {
@@ -587,9 +794,9 @@
     }
 
     function calculateEndTime() {
-        if (isPresentationMode) return;
         const startVal = document.getElementById('input-start').value;
         const durationVal = parseInt(document.getElementById('input-duration').value, 10);
+
         if (!startVal || isNaN(durationVal) || durationVal <= 0) {
             document.getElementById('input-end').value = '';
             return;
@@ -598,7 +805,6 @@
     }
 
     function onStartTimeInput() {
-        if (isPresentationMode) return;
         if (timetableRaw.length === 0) {
             baseStartTimeStr = document.getElementById('input-start').value || "08:00";
         }
@@ -606,7 +812,6 @@
     }
 
     function setupNextFormPlaceholder() {
-        if (isPresentationMode) return;
         if (timetableRaw.length === 0) {
             if (!baseStartTimeStr) baseStartTimeStr = "08:00";
             document.getElementById('input-start').value = baseStartTimeStr;
@@ -646,7 +851,9 @@
             baseStartTimeStr = document.getElementById('input-start').value || "08:00";
         }
         timetableRaw.push({ duration, title, sound: false, alertMin });
+        
         document.getElementById('schedule-name').textContent = 'カスタム編集';
+        
         clearForm();
         refreshTimetableStructure(wasRunning ? true : "force", activeTitleBefore);
     }
@@ -680,6 +887,7 @@
         timetableRaw[index].duration = newDuration;
 
         const activeTitleBefore = (currentIndex >= 0 && timetableParsed[currentIndex]) ? timetableParsed[currentIndex].title : null;
+        
         document.getElementById('schedule-name').textContent = 'カスタム編集';
         editTargetIndex = -1;
         refreshTimetableStructure("force", activeTitleBefore);
@@ -695,7 +903,8 @@
         const row = document.getElementById(`insert-row-${index}`);
         const title = row.querySelector('.inline-insert-title').value.trim();
         const duration = parseInt(row.querySelector('.inline-insert-duration').value, 10);
-        let alertMin = 0;
+        let alertMin = parseInt(row.querySelector('.inline-insert-alert').value, 10);
+        if (isNaN(alertMin) || alertMin < 0) alertMin = 0;
 
         if (!title || isNaN(duration) || duration <= 0) {
             alert('プログラム名と所要時間を正しく入力してください。');
@@ -703,7 +912,9 @@
         }
 
         const activeTitleBefore = (currentIndex >= 0 && timetableParsed[currentIndex]) ? timetableParsed[currentIndex].title : null;
+
         timetableRaw.splice(index + 1, 0, { duration, title, sound: false, alertMin });
+        
         document.getElementById('schedule-name').textContent = 'カスタム編集';
         insertTargetIndex = -1;
         refreshTimetableStructure("force", activeTitleBefore);
@@ -712,8 +923,13 @@
     function changeInlineAlertMin(index, val) {
         let minutes = parseInt(val, 10);
         if (isNaN(minutes) || minutes < 0) minutes = 0;
+        
         timetableRaw[index].alertMin = minutes;
-        if (!timerInterval) saveAutoBackup();
+        
+        const wasRunning = (timerInterval !== null);
+        if (!wasRunning) {
+            saveAutoBackup();
+        }
     }
 
     function clearForm() {
@@ -728,6 +944,7 @@
         if (insertTargetIndex === index) insertTargetIndex = -1;
         const wasRunning = (timerInterval !== null);
         const activeTitleBefore = (currentIndex >= 0 && timetableParsed[currentIndex]) ? timetableParsed[currentIndex].title : null;
+        
         timetableRaw.splice(index, 1);
         document.getElementById('schedule-name').textContent = 'カスタム編集';
         refreshTimetableStructure(wasRunning ? true : "force", activeTitleBefore);
@@ -736,19 +953,30 @@
     function moveProgramItem(index, direction) {
         const newIndex = index + direction;
         if (newIndex < 0 || newIndex >= timetableRaw.length) return;
+
         const temp = timetableRaw[index];
         timetableRaw[index] = timetableRaw[newIndex];
         timetableRaw[newIndex] = temp;
+
         document.getElementById('schedule-name').textContent = 'カスタム編集';
         refreshTimetableStructure("force", null);
     }
 
     function toggleSoundItem(index) {
-        if (timetableRaw[index].sound === undefined) timetableRaw[index].sound = true;
+        if (timetableRaw[index].sound === undefined) {
+            timetableRaw[index].sound = true;
+        }
         timetableRaw[index].sound = !timetableRaw[index].sound;
         timetableParsed[index].sound = timetableRaw[index].sound;
+        
+        const btn = document.querySelector(`#row-${index} .btn-sound`);
+        if (btn) {
+            const isSoundOn = timetableRaw[index].sound;
+            btn.className = 'btn-sound sound-on';
+            btn.title = isSoundOn ? '音をミュートする' : '音を鳴らす';
+            btn.textContent = isSoundOn ? '🔊' : '🔇';
+        }
         saveAutoBackup();
-        renderTimetableList();
     }
 
     function autoSelectCurrentIndex() {
@@ -771,19 +999,21 @@
             currentIndex = -1;
         }
 
-        if (!isPresentationMode && oldIndex !== currentIndex && editTargetIndex === -1 && insertTargetIndex === -1) {
+        if (oldIndex !== currentIndex && editTargetIndex === -1 && insertTargetIndex === -1) {
             for (let i = 0; i < timetableParsed.length; i++) {
                 const row = document.getElementById(`row-${i}`);
                 if (row) {
-                    if (i === currentIndex) row.classList.add('active-row');
-                    else row.classList.remove('active-row');
+                    if (i === currentIndex) {
+                        row.classList.add('active-row');
+                    } else {
+                        row.classList.remove('active-row');
+                    }
                 }
             }
         }
     }
 
     function renderTimetableList() {
-        if (isPresentationMode) return;
         const tbody = document.getElementById('timetable-body');
         tbody.innerHTML = '';
 
@@ -822,11 +1052,14 @@
                             <input type="number" class="inline-edit-input inline-edit-num inline-duration-input" min="1" value="${timetableRaw[index].duration}">分
                         </div>
                     </td>
-                    <td><input type="text" class="inline-edit-input inline-title-input" value="${item.title}"></td>
-                    <td style="text-align: center; display: flex; gap: 4px; justify-content: center; align-items: center;">
+                    <td>
+                        <input type="text" class="inline-edit-input inline-title-input" value="${item.title}">
+                    </td>
+                    <td style="text-align: center; display: flex; gap: 4px; justify-content: center; align-items: center; flex-wrap: wrap;">
                         <button onclick="saveInlineEdit(${index})" style="background:#004d00; color:#fff; width: 80px;">保存</button>
                     </td>
                 `;
+                tbody.appendChild(row);
             } else {
                 row.innerHTML = `
                     <td>${index + 1}</td>
@@ -835,17 +1068,19 @@
                     <td style="text-align: center; display: flex; gap: 4px; justify-content: center; align-items: center; flex-wrap: wrap;">
                         <button onclick="moveProgramItem(${index}, -1)" ${index === 0 ? "disabled" : ""}>↑</button>
                         <button onclick="moveProgramItem(${index}, 1)" ${index === timetableParsed.length - 1 ? "disabled" : ""}>↓</button>
-                        <button class="${soundBtnClass}" onclick="toggleSoundItem(${index})">${soundBtnIcon}</button>
+                        <button class="${soundBtnClass}" onclick="toggleSoundItem(${index})" title="${isSoundOn ? '音をミュートする' : '音を鳴らす'}">${soundBtnIcon}</button>
+                        
                         <div style="display: flex; align-items: center; background:#161616; border:1px solid var(--table-border); padding:2px 4px; border-radius:4px; font-size:0.8rem; color:#888;">
-                            ⚠️<input type="number" class="inline-alert-input" min="0" value="${alertVal}" onchange="changeInlineAlertMin(${index}, this.value)" style="width:40px;background:#111;color:#aaa;border:none;">分前
+                            ⚠️<input type="number" class="inline-alert-input" min="0" value="${alertVal}" onchange="changeInlineAlertMin(${index}, this.value)">分前
                         </div>
+
                         <button class="btn-edit" onclick="editProgramItem(${index})">編集</button>
-                        <button class="btn-edit" onclick="prepareInsertItem(${index})">＋</button>
+                        <button class="btn-edit" onclick="prepareInsertItem(${index})" title="このプログラムの後ろに挿入">＋</button>
                         <button class="btn-delete" onclick="deleteProgramItem(${index})">削除</button>
                     </td>
                 `;
+                tbody.appendChild(row);
             }
-            tbody.appendChild(row);
 
             if (index === insertTargetIndex) {
                 const insertRow = document.createElement('tr');
@@ -861,14 +1096,34 @@
                     </td>
                     <td>
                         <input type="text" class="inline-edit-input inline-insert-title" placeholder="挿入するプログラム名を入力...">
+                        <div style="margin-top:5px; display:flex; align-items:center; gap:4px; font-size:0.8rem; color:#666;">
+                            ⚠️警告: <input type="number" class="inline-edit-input inline-edit-num inline-insert-alert" min="0" value="0"> 分前
+                        </div>
                     </td>
-                    <td style="text-align: center;">
+                    <td style="text-align: center; display: flex; gap: 4px; justify-content: center; align-items: center; flex-wrap: wrap;">
                         <button onclick="saveInlineInsert(${index})" style="background:#005580; color:#fff; width: 100px;">ここに挿入</button>
                     </td>
                 `;
                 tbody.appendChild(insertRow);
             }
         });
+    }
+
+    function updateTimetableCellsOnly() {
+        if (editTargetIndex !== -1 || insertTargetIndex !== -1) return; 
+        
+        let now = new Date();
+        timetableParsed.forEach((item, index) => {
+            const row = document.getElementById(`row-${index}`);
+            if (row) {
+                const cell = row.querySelector('.time-range-cell');
+                if (cell) {
+                    let itemDateLabel = (item.start.getDate() !== now.getDate()) ? `<span style="color:#00ffff; font-size:0.75rem; margin-right:4px;">(翌日)</span>` : "";
+                    cell.innerHTML = `${itemDateLabel}${item.startStr} 〜 ${item.endStr}<br><span style="color:#555; font-size:0.8rem;">(${timetableRaw[index].duration}分)</span>`;
+                }
+            }
+        });
+        setupNextFormPlaceholder(); 
     }
 
     function checkAndSyncTime(now) {
@@ -878,6 +1133,7 @@
             const firstProgramStart = timetableParsed[0].start;
             if (now >= firstProgramStart) {
                 currentIndex = 0;
+                updateTimetableCellsOnly();
             } else {
                 updateDisplayOnly();
                 return;
@@ -886,8 +1142,19 @@
 
         const current = timetableParsed[currentIndex];
         if (now >= current.end) {
-            if (current.sound && !isPresentationMode) playBeep();
+            if (current.sound) {
+                playBeep();
+            }
             autoSelectCurrentIndex();
+            
+            if (currentIndex === -1) {
+                const totalEnd = timetableParsed[timetableParsed.length - 1].end;
+                if (now >= totalEnd) {
+                    refreshTimetableStructure(true, null);
+                    return;
+                }
+            }
+            updateTimetableCellsOnly();
         }
 
         if (currentIndex >= 0) {
@@ -899,7 +1166,7 @@
         updateDisplayOnly();
     }
 
-    function updateDisplayOnly(skipSync = false) {
+    function updateDisplayOnly() {
         const now = new Date();
         const year = now.getFullYear();
         const month = now.getMonth() + 1;
@@ -911,19 +1178,23 @@
 
         const topInfoEl = document.getElementById('top-info');
         const timeLeftEl = document.getElementById('time-left');
-
-        if (!topInfoEl || !timeLeftEl) return;
+        const controlsZone = document.getElementById('timer-controls-zone');
 
         timeLeftEl.classList.remove('alert-mode');
+
         const isWaiting = (currentIndex === -1 || (timetableParsed.length > 0 && now < timetableParsed[0].start));
 
         if (isWaiting && timetableParsed.length > 0) {
             const nextFirst = timetableParsed[0];
+            
             topInfoEl.textContent = `${year}/${month}/${date}(${day})`;
+            
             document.getElementById('current-title').textContent = '';
             timeLeftEl.innerHTML = getHMSClockHTML();
+            
             document.getElementById('next-title').textContent = `開始予定：${nextFirst.startStr}〜`;
-            if (!skipSync) syncStateToLocalStorage();
+            
+            controlsZone.style.display = 'none';
             return;
         }
 
@@ -932,9 +1203,11 @@
             document.getElementById('current-title').textContent = 'プログラムが登録されていません';
             timeLeftEl.textContent = '00:00';
             document.getElementById('next-title').textContent = '次：--';
-            if (!skipSync) syncStateToLocalStorage();
+            controlsZone.style.display = 'none';
             return;
         }
+
+        controlsZone.style.display = 'flex';
 
         topInfoEl.textContent = `${year}/${month}/${date}(${day}) ${hours}:${minutes}`;
         const current = timetableParsed[currentIndex];
@@ -948,108 +1221,10 @@
         }
         
         const next = timetableParsed[currentIndex + 1];
-        document.getElementById('next-title').textContent = next ? `次：${next.title} (${next.startStr}〜)` : '次：なし';
+        document.getElementById('next-title').textContent = next ? `次：${next.title} (${next.startStr}〜)` : '次：なし（終了後に翌日ループ）';
 
-        if (!isPresentationMode) {
-            const btnStart = document.getElementById('btn-start');
-            const btnPause = document.getElementById('btn-pause');
-            if (btnStart) btnStart.disabled = (timerInterval !== null);
-            if (btnPause) btnPause.disabled = (timerInterval === null);
-        }
-
-        if (!skipSync) syncStateToLocalStorage();
-    }
-
-    function syncStateToLocalStorage() {
-        if (isPresentationMode) return;
-        
-        let targetEndTimeMs = null;
-        if (currentIndex >= 0 && timetableParsed[currentIndex]) {
-            targetEndTimeMs = timetableParsed[currentIndex].end.getTime();
-        }
-
-        const payload = {
-            currentTitle: (currentIndex >= 0 && timetableParsed[currentIndex]) ? timetableParsed[currentIndex].title : (timetableParsed.length > 0 && new Date() < timetableParsed[0].start ? "" : "プログラムが登録されていません"),
-            nextTitleText: document.getElementById('next-title').textContent,
-            scheduleNameText: document.getElementById('schedule-name').textContent,
-            targetEndTimeMs: targetEndTimeMs,
-            firstProgramStartMs: (timetableParsed.length > 0) ? timetableParsed[0].start.getTime() : null,
-            alertMin: (currentIndex >= 0 && timetableParsed[currentIndex]) ? (timetableParsed[currentIndex].alertMin || 0) : 0
-        };
-
-        const payloadString = JSON.stringify(payload);
-        if (payloadString !== lastSyncedStateString) {
-            lastSyncedStateString = payloadString;
-            localStorage.setItem('presentation_sync_data', payloadString);
-        }
-    }
-
-    if (isPresentationMode) {
-        let remoteData = initialSyncData;
-
-        window.addEventListener('storage', (e) => {
-            if (e.key === 'presentation_sync_data' && e.newValue) {
-                try {
-                    remoteData = JSON.parse(e.newValue);
-                } catch(err) {}
-            }
-        });
-
-        setInterval(() => {
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = now.getMonth() + 1;
-            const date = now.getDate();
-            const week = ["日", "月", "火", "水", "木", "金", "土"];
-            const day = week[now.getDay()];
-            const hours = now.getHours().toString().padStart(2, '0');
-            const minutes = now.getMinutes().toString().padStart(2, '0');
-            const seconds = now.getSeconds().toString().padStart(2, '0');
-
-            const topInfoEl = document.getElementById('top-info');
-            const currentTitleEl = document.getElementById('current-title');
-            const timeEl = document.getElementById('time-left');
-            const nextTitleEl = document.getElementById('next-title');
-            const scheduleNameEl = document.getElementById('schedule-name');
-
-            if (!topInfoEl || !currentTitleEl || !timeEl) return;
-
-            const topInfoStr = `${year}/${month}/${date}(${day}) ${hours}:${minutes}`;
-            if (topInfoEl.textContent !== topInfoStr) topInfoEl.textContent = topInfoStr;
-
-            if (remoteData.firstProgramStartMs && now.getTime() < remoteData.firstProgramStartMs) {
-                if (currentTitleEl.textContent !== "") currentTitleEl.textContent = "";
-                const clockHTML = `${hours}:${minutes}<span class="sec-red">:${seconds}</span>`;
-                if (timeEl.innerHTML !== clockHTML) timeEl.innerHTML = clockHTML;
-                if (timeEl.classList.contains('alert-mode')) timeEl.classList.remove('alert-mode');
-                if (nextTitleEl.textContent !== remoteData.nextTitleText) nextTitleEl.textContent = remoteData.nextTitleText;
-                if (scheduleNameEl.textContent !== remoteData.scheduleNameText) scheduleNameEl.textContent = remoteData.scheduleNameText;
-                return;
-            }
-
-            if (currentTitleEl.textContent !== remoteData.currentTitle) currentTitleEl.textContent = remoteData.currentTitle;
-            if (nextTitleEl.textContent !== remoteData.nextTitleText) nextTitleEl.textContent = remoteData.nextTitleText;
-            if (scheduleNameEl.textContent !== remoteData.scheduleNameText) scheduleNameEl.textContent = remoteData.scheduleNameText;
-
-            if (remoteData.targetEndTimeMs) {
-                const diffSec = Math.max(0, Math.floor((remoteData.targetEndTimeMs - now.getTime()) / 1000));
-                const timeStr = formatTimeLeftString(diffSec);
-                
-                if (timeEl.textContent !== timeStr) {
-                    timeEl.textContent = timeStr;
-                }
-
-                const alertSec = (remoteData.alertMin || 0) * 60;
-                if (diffSec <= alertSec && alertSec > 0) {
-                    if (!timeEl.classList.contains('alert-mode')) timeEl.classList.add('alert-mode');
-                } else {
-                    if (timeEl.classList.contains('alert-mode')) timeEl.classList.remove('alert-mode');
-                }
-            } else {
-                if (timeEl.textContent !== "00:00") timeEl.textContent = "00:00";
-                if (timeEl.classList.contains('alert-mode')) timeEl.classList.remove('alert-mode');
-            }
-        }, 100); 
+        document.getElementById('btn-start').disabled = (timerInterval !== null);
+        document.getElementById('btn-pause').disabled = (timerInterval === null);
     }
 
     function startTimer() {
@@ -1058,16 +1233,26 @@
 
         if (isPaused && pauseStartTime) {
             const pausedDurationMs = Date.now() - pauseStartTime;
+            
             timetableParsed = timetableParsed.map(item => {
                 const newStart = new Date(item.start.getTime() + pausedDurationMs);
                 const newEnd = new Date(item.end.getTime() + pausedDurationMs);
-                return { ...item, start: newStart, end: newEnd, startStr: dateToTimeString(newStart), endStr: dateToTimeString(newEnd) };
+
+                return {
+                    ...item,
+                    start: newStart,
+                    end: newEnd,
+                    startStr: dateToTimeString(newStart),
+                    endStr: dateToTimeString(newEnd)
+                };
             });
+
             baseStartTimeStr = timetableParsed[0].startStr;
             pauseStartTime = null; 
         }
 
         autoSelectCurrentIndex();
+
         if (!timerInterval) {
             isPaused = false;
             timerInterval = setInterval(() => {
@@ -1076,14 +1261,9 @@
             }, 1000);
         }
         
-        if (!isPresentationMode) {
-            const btnStart = document.getElementById('btn-start');
-            const btnPause = document.getElementById('btn-pause');
-            if (btnStart) btnStart.disabled = true;
-            if (btnPause) btnPause.disabled = false;
-        }
-        
-        updateDisplayOnly();
+        document.getElementById('btn-start').disabled = true;
+        document.getElementById('btn-pause').disabled = false;
+        updateTimetableCellsOnly();
     }
 
     function pauseTimer() {
@@ -1092,14 +1272,9 @@
             timerInterval = null;
             isPaused = true;
             pauseStartTime = Date.now(); 
-            if (!isPresentationMode) {
-                const btnStart = document.getElementById('btn-start');
-                const btnPause = document.getElementById('btn-pause');
-                if (btnStart) btnStart.disabled = false;
-                if (btnPause) btnPause.disabled = true;
-            }
+            document.getElementById('btn-start').disabled = false;
+            document.getElementById('btn-pause').disabled = true;
         }
-        updateDisplayOnly();
     }
 
     function resetTimer() {
@@ -1109,6 +1284,7 @@
             clearInterval(timerInterval);
             timerInterval = null;
         }
+        
         refreshTimetableStructure(true, null, true);
     }
 
@@ -1116,14 +1292,21 @@
         const nameInput = document.getElementById('save-name');
         const name = nameInput.value.trim();
         if (!name) {
-            alert('保存名を入力してください。');
+            alert('保存名（テンプレート名）を入力してください。');
             return;
         }
+
         let savedData = JSON.parse(localStorage.getItem('saved_timetables') || '{}');
-        savedData[name] = { baseStartTimeStr: baseStartTimeStr, timetableRaw: timetableRaw };
+        savedData[name] = {
+            baseStartTimeStr: baseStartTimeStr,
+            timetableRaw: timetableRaw
+        };
+
         localStorage.setItem('saved_timetables', JSON.stringify(savedData));
+        
         document.getElementById('schedule-name').textContent = name;
         localStorage.setItem('timetable_current_name', name);
+
         nameInput.value = '';
         updateLoadSelectOptions();
         alert(`「${name}」として保存しました！`);
@@ -1132,14 +1315,28 @@
     function loadTimetableFromStorage() {
         const select = document.getElementById('load-select');
         const name = select.value;
-        if (!name) return;
+        if (!name) {
+            alert('読み込むスケジュールを選択してください。');
+            return;
+        }
+
         let savedData = JSON.parse(localStorage.getItem('saved_timetables') || '{}');
         if (savedData[name]) {
             pauseTimer();
             baseStartTimeStr = savedData[name].baseStartTimeStr || "08:00";
             timetableRaw = savedData[name].timetableRaw || [];
+            
+            timetableRaw = timetableRaw.map(item => {
+                if (item.alertMin === undefined) item.alertMin = 0;
+                return item;
+            });
+
+            isPaused = false;
+            pauseStartTime = null;
+            
             document.getElementById('schedule-name').textContent = name;
             localStorage.setItem('timetable_current_name', name);
+            
             refreshTimetableStructure(true); 
             startTimer();                   
         }
@@ -1148,20 +1345,30 @@
     function deleteTimetableFromStorage() {
         const select = document.getElementById('load-select');
         const name = select.value;
-        if (!name) return;
-        if (confirm(`本当に「${name}」を削除しますか？`)) {
+        if (!name) {
+            alert('削除するスケジュールを選択してください。');
+            return;
+        }
+
+        if (confirm(`本当に「${name}」の保存データを削除しますか？`)) {
             let savedData = JSON.parse(localStorage.getItem('saved_timetables') || '{}');
             delete savedData[name];
             localStorage.setItem('saved_timetables', JSON.stringify(savedData));
             updateLoadSelectOptions();
             select.value = "";
+            
+            const currentName = localStorage.getItem('timetable_current_name');
+            if (currentName === name) {
+                document.getElementById('schedule-name').textContent = '未選択';
+                localStorage.removeItem('timetable_current_name');
+            }
         }
     }
 
     function updateLoadSelectOptions() {
-        if (isPresentationMode) return;
         const select = document.getElementById('load-select');
         select.innerHTML = '<option value="">-- 選択してください --</option>';
+        
         let savedData = JSON.parse(localStorage.getItem('saved_timetables') || '{}');
         Object.keys(savedData).forEach(name => {
             const opt = document.createElement('option');
@@ -1172,18 +1379,22 @@
     }
 
     function saveAutoBackup() {
-        const backup = { baseStartTimeStr: baseStartTimeStr, timetableRaw: timetableRaw };
+        const backup = {
+            baseStartTimeStr: baseStartTimeStr,
+            timetableRaw: timetableRaw
+        };
         localStorage.setItem('timetable_autobackup', JSON.stringify(backup));
     }
 
     function initLoad() {
-        if (isPresentationMode) return;
-
         let savedData = JSON.parse(localStorage.getItem('saved_timetables') || '{}');
-        if (!savedData["6時間｜清掃なし"]) {
-            savedData["6時間｜清掃なし"] = defaultSampleData;
-            localStorage.setItem('saved_timetables', JSON.stringify(savedData));
-        }
+        
+        Object.keys(defaultPresetTimetables).forEach(key => {
+            if (!savedData[key]) {
+                savedData[key] = defaultPresetTimetables[key];
+            }
+        });
+        localStorage.setItem('saved_timetables', JSON.stringify(savedData));
 
         updateLoadSelectOptions();
 
@@ -1195,20 +1406,27 @@
                 const parsedBackup = JSON.parse(checkBackup);
                 if (parsedBackup.timetableRaw && parsedBackup.timetableRaw.length > 0) {
                     baseStartTimeStr = parsedBackup.baseStartTimeStr || "08:00";
-                    timetableRaw = parsedBackup.timetableRaw;
+                    timetableRaw = parsedBackup.timetableRaw.map(item => {
+                        if (item.alertMin === undefined) item.alertMin = 0;
+                        return item;
+                    });
                     hasValidBackup = true;
                 }
-            } catch(e) {}
+            } catch(e) {
+                hasValidBackup = false;
+            }
         }
 
         if (!hasValidBackup || timetableRaw.length === 0) {
             baseStartTimeStr = defaultSampleData.baseStartTimeStr;
             timetableRaw = JSON.parse(JSON.stringify(defaultSampleData.timetableRaw));
-            document.getElementById('schedule-name').textContent = '6時間｜清掃なし';
+            document.getElementById('schedule-name').textContent = '6時間｜清掃なし (初期プリセット)';
         } else {
             const savedCurrentName = localStorage.getItem('timetable_current_name');
             if (savedCurrentName) {
                 document.getElementById('schedule-name').textContent = savedCurrentName;
+            } else {
+                document.getElementById('schedule-name').textContent = '自動バックアップから復元';
             }
         }
 
