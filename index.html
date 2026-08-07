@@ -9,6 +9,9 @@
     
     <link rel="apple-touch-icon" href="https://drive.google.com/uc?export=view&id=1GX6rNN9sU3XtTOcfncRZedDXnRqQsyDC">
 
+    <!-- QRコード生成ライブラリ -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
     <style>
         :root {
             --bg-color: #000000;
@@ -278,6 +281,33 @@
         .inline-edit-num { width: 70px !important; }
         .insert-row { background-color: #1e1e1e !important; border-left: 4px solid #00ffff; }
 
+        /* モーダルダイアログ用スタイル */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.7);
+            z-index: 20000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-content {
+            background: #1a1a1a;
+            border: 1px solid #444;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+            color: #ddd;
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .modal-header h3 { margin: 0; font-size: 1.1rem; color: #fff; }
+        .modal-section { margin-bottom: 20px; }
+        .modal-section h4 { margin: 0 0 8px 0; font-size: 0.95rem; color: #00ffff; }
+        .qr-container { display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 10px; background: #fff; padding: 10px; border-radius: 8px; width: fit-content; margin: 10px auto; }
+
         /* 横画面時レスポンシブ */
         @media (max-height: 440px) and (orientation: landscape) {
             .timer-display.ios-fullscreen { 
@@ -418,6 +448,12 @@
                     <button class="btn-delete" onclick="deleteTimetableFromStorage()" style="padding: 8px 12px;">削除</button>
                 </div>
             </div>
+            <div class="form-group" style="margin-left: auto;">
+                <label>外部連携・共有</label>
+                <div>
+                    <button onclick="openShareModal()" style="background:#005580; color:#fff;">📲 書き出し/共有</button>
+                </div>
+            </div>
         </div>
 
         <h3 style="color:#888; font-size:1rem; margin-top:0;">📊 進行スケジュール</h3>
@@ -464,6 +500,33 @@
     </div>
 </div>
 
+<!-- 共有/入出力用モーダル -->
+<div id="share-modal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>🔗 スケジュールの共有と入出力</h3>
+            <button onclick="closeShareModal()" style="padding:4px 8px;">✕</button>
+        </div>
+        
+        <div class="modal-section">
+            <h4>1. URL / QRコードで共有 (現在のスケジュール)</h4>
+            <p style="font-size:0.8rem; color:#888; margin-bottom:8px;">表示中のスケジュールを他の端末へ瞬時に共有します。</p>
+            <button onclick="copyShareUrl()" style="width:100%; margin-bottom:10px; background:#1b4332; color:#fff;">📋 共有用URLをコピー</button>
+            <div id="qrcode-box" class="qr-container"></div>
+        </div>
+
+        <div class="modal-section" style="border-top:1px dashed #333; padding-top:15px;">
+            <h4>2. JSONファイルでバックアップ / 復元</h4>
+            <p style="font-size:0.8rem; color:#888; margin-bottom:8px;">全保存データをファイルに出力、または復元します。</p>
+            <div style="display:flex; gap:10px;">
+                <button onclick="exportToJsonFile()" style="flex:1;">💾 保存データを書き出し</button>
+                <button onclick="document.getElementById('import-file-input').click()" style="flex:1;">📂 ファイルから読み込み</button>
+                <input type="file" id="import-file-input" accept=".json" style="display:none;" onchange="importFromJsonFile(event)">
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     let baseStartTimeStr = "08:00"; 
     let timetableRaw = [];
@@ -479,6 +542,7 @@
     let pauseStartTime = null; 
 
     let mouseTimer = null;
+    let qrCodeObj = null;
 
     const defaultSampleData = {
         baseStartTimeStr: "07:30",
@@ -1386,6 +1450,152 @@
         localStorage.setItem('timetable_autobackup', JSON.stringify(backup));
     }
 
+    /* -------------------------------------------------------------
+       📲 モーダル／共有／JSON入出力関連処理
+    ------------------------------------------------------------- */
+    function openShareModal() {
+        document.getElementById('share-modal').classList.add('active');
+        generateQrCode();
+    }
+
+    function closeShareModal() {
+        document.getElementById('share-modal').classList.remove('active');
+    }
+
+    // 日本語テキストを安全に Base64 エンコードする関数
+    function utf8ToBase64(str) {
+        return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (match, p1) => String.fromCharCode('0x' + p1)));
+    }
+
+    // Base64 から日本語テキストをデコードする関数
+    function base64ToUtf8(str) {
+        return decodeURIComponent(Array.prototype.map.call(atob(str), (c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+    }
+
+    function getShareUrl() {
+        const currentName = document.getElementById('schedule-name').textContent || "共有スケジュール";
+        const shareData = {
+            name: currentName,
+            baseStartTimeStr: baseStartTimeStr,
+            timetableRaw: timetableRaw
+        };
+        const jsonStr = JSON.stringify(shareData);
+        const encodedData = utf8ToBase64(jsonStr);
+        const url = new URL(window.location.href);
+        url.search = ''; 
+        url.searchParams.set('data', encodedData);
+        return url.toString();
+    }
+
+    function copyShareUrl() {
+        const url = getShareUrl();
+        navigator.clipboard.writeText(url).then(() => {
+            alert('共有用URLをクリップボードにコピーしました！');
+        }).catch(err => {
+            alert('コピーに失敗しました: ' + err);
+        });
+    }
+
+    function generateQrCode() {
+        const url = getShareUrl();
+        const qrBox = document.getElementById('qrcode-box');
+        qrBox.innerHTML = '';
+        if (typeof QRCode !== 'undefined') {
+            qrCodeObj = new QRCode(qrBox, {
+                text: url,
+                width: 160,
+                height: 160,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.M
+            });
+        }
+    }
+
+    function exportToJsonFile() {
+        const savedData = JSON.parse(localStorage.getItem('saved_timetables') || '{}');
+        const exportObj = {
+            saved_timetables: savedData,
+            current: {
+                name: document.getElementById('schedule-name').textContent,
+                baseStartTimeStr: baseStartTimeStr,
+                timetableRaw: timetableRaw
+            }
+        };
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj, null, 2));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", `timetable_backup_${new Date().toISOString().slice(0,10)}.json`);
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+    }
+
+    function importFromJsonFile(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const imported = JSON.parse(e.target.result);
+                if (imported.saved_timetables) {
+                    let savedData = JSON.parse(localStorage.getItem('saved_timetables') || '{}');
+                    Object.assign(savedData, imported.saved_timetables);
+                    localStorage.setItem('saved_timetables', JSON.stringify(savedData));
+                    updateLoadSelectOptions();
+                }
+                if (imported.current) {
+                    pauseTimer();
+                    baseStartTimeStr = imported.current.baseStartTimeStr || "08:00";
+                    timetableRaw = imported.current.timetableRaw || [];
+                    document.getElementById('schedule-name').textContent = imported.current.name || "復元データ";
+                    refreshTimetableStructure(true);
+                    startTimer();
+                }
+                alert('データを正常に読み込みました！');
+                closeShareModal();
+            } catch (err) {
+                alert('JSONファイルの読み込みに失敗しました。形式を確認してください。');
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    function checkUrlShareParams() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const dataParam = urlParams.get('data');
+        if (dataParam) {
+            try {
+                const jsonStr = base64ToUtf8(dataParam);
+                const shareData = JSON.parse(jsonStr);
+                
+                if (shareData && shareData.timetableRaw) {
+                    baseStartTimeStr = shareData.baseStartTimeStr || "08:00";
+                    timetableRaw = shareData.timetableRaw;
+                    const name = shareData.name || "URL共有データ";
+                    
+                    document.getElementById('schedule-name').textContent = name;
+                    
+                    // 保存済みデータにも自動追加
+                    let savedData = JSON.parse(localStorage.getItem('saved_timetables') || '{}');
+                    savedData[name] = {
+                        baseStartTimeStr: baseStartTimeStr,
+                        timetableRaw: timetableRaw
+                    };
+                    localStorage.setItem('saved_timetables', JSON.stringify(savedData));
+                    
+                    // アドレスバーのパラメータを綺麗に消去
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    return true;
+                }
+            } catch(e) {
+                console.error("共有URLのロード失敗:", e);
+            }
+        }
+        return false;
+    }
+
     function initLoad() {
         let savedData = JSON.parse(localStorage.getItem('saved_timetables') || '{}');
         
@@ -1398,35 +1608,41 @@
 
         updateLoadSelectOptions();
 
-        const checkBackup = localStorage.getItem('timetable_autobackup');
-        let hasValidBackup = false;
+        // 1. URL共有パラメータがあるかを優先チェック
+        const loadedFromUrl = checkUrlShareParams();
 
-        if (checkBackup) {
-            try {
-                const parsedBackup = JSON.parse(checkBackup);
-                if (parsedBackup.timetableRaw && parsedBackup.timetableRaw.length > 0) {
-                    baseStartTimeStr = parsedBackup.baseStartTimeStr || "08:00";
-                    timetableRaw = parsedBackup.timetableRaw.map(item => {
-                        if (item.alertMin === undefined) item.alertMin = 0;
-                        return item;
-                    });
-                    hasValidBackup = true;
+        if (!loadedFromUrl) {
+            // 2. 自動バックアップがあるかをチェック
+            const checkBackup = localStorage.getItem('timetable_autobackup');
+            let hasValidBackup = false;
+
+            if (checkBackup) {
+                try {
+                    const parsedBackup = JSON.parse(checkBackup);
+                    if (parsedBackup.timetableRaw && parsedBackup.timetableRaw.length > 0) {
+                        baseStartTimeStr = parsedBackup.baseStartTimeStr || "08:00";
+                        timetableRaw = parsedBackup.timetableRaw.map(item => {
+                            if (item.alertMin === undefined) item.alertMin = 0;
+                            return item;
+                        });
+                        hasValidBackup = true;
+                    }
+                } catch(e) {
+                    hasValidBackup = false;
                 }
-            } catch(e) {
-                hasValidBackup = false;
             }
-        }
 
-        if (!hasValidBackup || timetableRaw.length === 0) {
-            baseStartTimeStr = defaultSampleData.baseStartTimeStr;
-            timetableRaw = JSON.parse(JSON.stringify(defaultSampleData.timetableRaw));
-            document.getElementById('schedule-name').textContent = '6時間｜清掃なし (初期プリセット)';
-        } else {
-            const savedCurrentName = localStorage.getItem('timetable_current_name');
-            if (savedCurrentName) {
-                document.getElementById('schedule-name').textContent = savedCurrentName;
+            if (!hasValidBackup || timetableRaw.length === 0) {
+                baseStartTimeStr = defaultSampleData.baseStartTimeStr;
+                timetableRaw = JSON.parse(JSON.stringify(defaultSampleData.timetableRaw));
+                document.getElementById('schedule-name').textContent = '6時間｜清掃なし (初期プリセット)';
             } else {
-                document.getElementById('schedule-name').textContent = '自動バックアップから復元';
+                const savedCurrentName = localStorage.getItem('timetable_current_name');
+                if (savedCurrentName) {
+                    document.getElementById('schedule-name').textContent = savedCurrentName;
+                } else {
+                    document.getElementById('schedule-name').textContent = '自動バックアップから復元';
+                }
             }
         }
 
