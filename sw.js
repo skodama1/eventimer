@@ -4,7 +4,7 @@
    - 同一オリジン: ネットワーク優先 (常に最新を取得し、オフライン時はキャッシュで動作)
    - CDN (フォント/ライブラリ): キャッシュ優先 (2回目以降はオフラインでも表示) */
 
-const CACHE_NAME = 'protimer-v1.0.0';
+const CACHE_NAME = 'protimer-v1.1.0';
 
 const APP_SHELL = [
     './',

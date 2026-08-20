@@ -149,6 +149,14 @@
             </div>
         </div>
 
+        <div class="weekday-panel">
+            <label class="settings-check weekday-toggle">
+                <input type="checkbox" id="weekday-enabled" onchange="onWeekdayEnabledChange(this.checked)">
+                <span><svg class="icon"><use href="#i-clock"/></svg> 曜日ごとにスケジュールを自動で読み込む</span>
+            </label>
+            <div class="weekday-grid" id="weekday-grid" style="display:none;"></div>
+        </div>
+
         <div class="table-toolbar">
             <h3><svg class="icon"><use href="#i-list"/></svg>進行スケジュール</h3>
             <div class="table-actions">
@@ -237,6 +245,40 @@
     </div>
 </div>
 
+<!-- 初回ガイド (オンボーディング) -->
+<div id="onboarding-modal" class="modal-overlay">
+    <div class="modal-content onboarding-content">
+        <div class="onboarding-slide" data-slide="0">
+            <div class="onboarding-illust"><svg class="icon"><use href="#i-list"/></svg></div>
+            <h3>進行表をつくる</h3>
+            <p>時間割やイベントの進行表を登録すると、その通りにタイマーが進みます。<br>
+            まずは「保存済みから呼び出し」の<strong>テンプレート</strong>を読み込むのが簡単です。行はドラッグで並べ替えできます。</p>
+        </div>
+        <div class="onboarding-slide" data-slide="1" style="display:none;">
+            <div class="onboarding-illust">
+                <svg class="icon"><use href="#i-clock"/></svg><svg class="icon"><use href="#i-pointer"/></svg>
+            </div>
+            <h3>2つの進行モード</h3>
+            <p class="onboarding-mode"><svg class="icon"><use href="#i-clock"/></svg><strong>時刻同期</strong> — 現在時刻に合わせて自動で進行。学校の時間割・タイムテーブル向け。</p>
+            <p class="onboarding-mode"><svg class="icon"><use href="#i-pointer"/></svg><strong>手動進行</strong> — ボタンで進めて、時間切れ後は<span class="onboarding-red">超過時間</span>を表示。発表会・イベント司会向け。</p>
+        </div>
+        <div class="onboarding-slide" data-slide="2" style="display:none;">
+            <div class="onboarding-illust"><svg class="icon"><use href="#i-maximize"/></svg></div>
+            <h3>本番はこれだけ</h3>
+            <p>「全画面」にして置いておくだけ。画面はスリープせず、警告時刻になると<span class="onboarding-red">点滅と音</span>でお知らせします。<br>
+            共有メニューの<strong>閲覧専用URL</strong>を使えば会場のモニターにも映せます。</p>
+        </div>
+
+        <div class="onboarding-dots" id="onboarding-dots">
+            <span class="dot active"></span><span class="dot"></span><span class="dot"></span>
+        </div>
+        <div class="onboarding-nav">
+            <button id="onboarding-skip" onclick="finishOnboarding()">スキップ</button>
+            <button class="btn-primary" id="onboarding-next" onclick="nextOnboardingSlide()">次へ</button>
+        </div>
+    </div>
+</div>
+
 <!-- 設定モーダル -->
 <div id="settings-modal" class="modal-overlay">
     <div class="modal-content">
@@ -247,6 +289,13 @@
 
         <div class="modal-section">
             <h4><svg class="icon"><use href="#i-volume"/></svg> サウンド</h4>
+            <div class="settings-row tone-row">
+                <span class="settings-label">音色</span>
+                <label class="tone-option"><input type="radio" name="setting-tone" value="chime" onchange="onToneChange('chime')"><span>チャイム</span></label>
+                <label class="tone-option"><input type="radio" name="setting-tone" value="bell" onchange="onToneChange('bell')"><span>ベル</span></label>
+                <label class="tone-option"><input type="radio" name="setting-tone" value="beep" onchange="onToneChange('beep')"><span>電子音</span></label>
+            </div>
+            <p class="modal-note" style="margin:6px 0 10px;">警告時は短く(チャイム2音 / ベル1鈴)、終了時は長く(チャイム4音 / ベル2鈴)鳴ります。</p>
             <div class="settings-row">
                 <label for="setting-volume" class="settings-label">音量</label>
                 <input type="range" id="setting-volume" min="0" max="100" step="5">
@@ -279,6 +328,11 @@
                 <div><kbd>F</kbd><span>全画面切替</span></div>
                 <div><kbd>Esc</kbd><span>全画面・ダイアログを閉じる</span></div>
             </div>
+        </div>
+
+        <div class="modal-section modal-section-divided" style="margin-bottom:10px;">
+            <button class="modal-wide-btn" onclick="closeSettingsModal(); openOnboarding();">
+                <svg class="icon"><use href="#i-list"/></svg>使い方ガイドをもう一度見る</button>
         </div>
 
         <div class="settings-version" id="settings-version"></div>

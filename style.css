@@ -846,6 +846,131 @@ kbd {
     letter-spacing: 0.08em;
 }
 
+/* 音色選択 */
+.tone-row { flex-wrap: wrap; }
+.tone-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    color: var(--text);
+    background: #0b0f15;
+    border: 1px solid #232c39;
+    border-radius: 99px;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.tone-option:has(input:checked) {
+    border-color: rgba(46, 230, 168, 0.5);
+    background: var(--accent-soft);
+    color: var(--accent);
+}
+.tone-option input[type="radio"] {
+    accent-color: var(--accent);
+    margin: 0;
+}
+
+/* ============ 初回ガイド ============ */
+.onboarding-content {
+    max-width: 430px;
+    text-align: center;
+}
+.onboarding-illust {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin: 18px 0 6px;
+}
+.onboarding-illust .icon {
+    width: 52px;
+    height: 52px;
+    color: var(--accent);
+    stroke-width: 1.5;
+}
+.onboarding-slide h3 {
+    color: var(--text-strong);
+    font-size: 1.15rem;
+    margin: 10px 0 12px;
+}
+.onboarding-slide p {
+    font-size: 0.88rem;
+    line-height: 1.8;
+    color: var(--text);
+    margin: 0 0 10px;
+}
+.onboarding-slide strong { color: var(--text-strong); }
+.onboarding-red { color: var(--alert); font-weight: 600; }
+.onboarding-mode {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    text-align: left;
+    background: #0b0f15;
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    padding: 10px 14px;
+}
+.onboarding-mode .icon {
+    width: 18px;
+    height: 18px;
+    color: var(--accent);
+    flex-shrink: 0;
+    margin-top: 4px;
+}
+.onboarding-dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin: 16px 0 14px;
+}
+.onboarding-dots .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #2c3543;
+    transition: all 0.2s ease;
+}
+.onboarding-dots .dot.active {
+    background: var(--accent);
+    width: 22px;
+    border-radius: 99px;
+}
+.onboarding-nav {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+.onboarding-nav .btn-primary { min-width: 110px; }
+
+/* ============ 曜日別自動切替 ============ */
+.weekday-panel {
+    border: 1px dashed var(--card-border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+}
+.weekday-toggle { font-size: 0.85rem; }
+.weekday-toggle .icon { width: 14px; height: 14px; vertical-align: -2px; color: var(--accent); }
+.weekday-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 8px;
+    margin-top: 12px;
+}
+.weekday-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.weekday-cell label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+.weekday-cell.today label { color: var(--accent); }
+.weekday-cell select { width: 100%; font-size: 0.8rem; padding: 6px 8px; }
+
 /* ============ フッター ============ */
 .app-footer {
     text-align: center;

@@ -37,10 +37,10 @@ let dragSrcIndex = null;
 
 const $ = (id) => document.getElementById(id);
 
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '1.1.0';
 
 /* ユーザー設定 (localStorageに永続化) */
-let settings = { volume: 50, wakeLock: true, notify: false };
+let settings = { volume: 50, wakeLock: true, notify: false, tone: 'chime' };
 try {
     settings = { ...settings, ...JSON.parse(localStorage.getItem('timer_settings') || '{}') };
 } catch (e) { /* 破損時はデフォルトを使う */ }
@@ -350,33 +350,79 @@ function initAudio() {
     }
 }
 
-/* kind: 'end' = 終了音(長め1回) / 'warn' = 警告音(短め2回) */
+/* kind: 'end' = 終了音 / 'warn' = 警告音。音色は settings.tone で切替 */
 function playBeep(kind = 'end') {
     if (!audioCtx) return;
     const volume = Math.max(0, Math.min(1, (settings.volume ?? 50) / 100));
     if (volume === 0) return;
     try {
-        const t = audioCtx.currentTime;
-        const mk = (start, dur, freq) => {
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(freq, t + start);
-            gain.gain.setValueAtTime(volume, t + start);
-            osc.start(t + start);
-            osc.stop(t + start + dur);
-        };
-        if (kind === 'warn') {
-            mk(0, 0.15, 660);
-            mk(0.25, 0.15, 660);
-        } else {
-            mk(0, 0.5, 880);
-        }
+        const tone = settings.tone || 'chime';
+        if (tone === 'chime') playChime(kind, volume);
+        else if (tone === 'bell') playBell(kind, volume);
+        else playElectronic(kind, volume);
     } catch (e) {
         console.log("Audio play error:", e);
     }
+}
+
+/* 電子音: シンプルなサイン波ビープ */
+function playElectronic(kind, volume) {
+    const t = audioCtx.currentTime;
+    const mk = (start, dur, freq) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, t + start);
+        gain.gain.setValueAtTime(volume, t + start);
+        osc.start(t + start);
+        osc.stop(t + start + dur);
+    };
+    if (kind === 'warn') {
+        mk(0, 0.15, 660);
+        mk(0.25, 0.15, 660);
+    } else {
+        mk(0, 0.5, 880);
+    }
+}
+
+/* 減衰する1音 (チャイム/ベル共通の部品) */
+function decayNote(freq, start, dur, peak) {
+    const t = audioCtx.currentTime + start;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, t);
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.linearRampToValueAtTime(peak, t + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    osc.start(t);
+    osc.stop(t + dur + 0.05);
+}
+
+/* 学校チャイム: ウェストミンスター (ミ・ド・レ・ソ) */
+function playChime(kind, volume) {
+    const E4 = 329.63, C4 = 261.63, D4 = 293.66, G3 = 196.00;
+    const notes = (kind === 'warn') ? [E4, C4] : [E4, C4, D4, G3];
+    const step = 0.62;
+    notes.forEach((f, i) => {
+        decayNote(f, i * step, 1.7, volume * 0.7);        // 基音
+        decayNote(f * 2, i * step, 1.1, volume * 0.18);   // 倍音
+        decayNote(f * 3, i * step, 0.6, volume * 0.06);   // 3倍音 (金属感)
+    });
+}
+
+/* ベル: 1鈴 = 予鈴(警告) / 2鈴 = 本鈴(終了) */
+function playBell(kind, volume) {
+    const strikes = (kind === 'warn') ? [0] : [0, 0.85];
+    strikes.forEach((s) => {
+        decayNote(1046.5, s, 1.5, volume * 0.6);          // 基音 C6
+        decayNote(1046.5 * 1.5, s, 1.2, volume * 0.3);    // 非整数倍音
+        decayNote(1046.5 * 2.4, s, 0.8, volume * 0.15);   // 高次部分音
+    });
 }
 
 /* =============================================================
@@ -432,11 +478,20 @@ function syncSettingsUI() {
     $('setting-volume-value').textContent = `${settings.volume}%`;
     $('setting-wakelock').checked = !!settings.wakeLock;
     $('setting-notify').checked = !!(settings.notify && ('Notification' in window) && Notification.permission === 'granted');
+    const toneRadio = document.querySelector(`input[name="setting-tone"][value="${settings.tone || 'chime'}"]`);
+    if (toneRadio) toneRadio.checked = true;
 }
 
 function testBeep() {
     initAudio();
     playBeep('end');
+}
+
+function onToneChange(tone) {
+    settings.tone = tone;
+    saveSettings();
+    initAudio();
+    playBeep('end'); // 即プレビュー
 }
 
 function onWakeLockSettingChange(on) {
@@ -465,6 +520,152 @@ function onNotifySettingChange(on) {
 }
 
 /* =============================================================
+   初回ガイド (オンボーディング)
+============================================================= */
+let onboardingIndex = 0;
+
+function openOnboarding() {
+    onboardingIndex = 0;
+    renderOnboardingSlide();
+    $('onboarding-modal').classList.add('active');
+}
+
+function renderOnboardingSlide() {
+    const slides = document.querySelectorAll('.onboarding-slide');
+    const dots = document.querySelectorAll('#onboarding-dots .dot');
+    slides.forEach((s, i) => { s.style.display = (i === onboardingIndex) ? '' : 'none'; });
+    dots.forEach((d, i) => d.classList.toggle('active', i === onboardingIndex));
+    const isLast = onboardingIndex >= slides.length - 1;
+    $('onboarding-next').innerHTML = isLast ? `${icon('check')}はじめる` : '次へ';
+    $('onboarding-skip').style.visibility = isLast ? 'hidden' : 'visible';
+}
+
+function nextOnboardingSlide() {
+    const slides = document.querySelectorAll('.onboarding-slide');
+    if (onboardingIndex >= slides.length - 1) {
+        finishOnboarding();
+        return;
+    }
+    onboardingIndex++;
+    renderOnboardingSlide();
+}
+
+function finishOnboarding() {
+    localStorage.setItem('onboarding_done', '1');
+    $('onboarding-modal').classList.remove('active');
+}
+
+/* =============================================================
+   曜日別スケジュール自動切替
+============================================================= */
+const WEEKDAY_LABELS = ['日', '月', '火', '水', '木', '金', '土'];
+let weekdayConfig = { enabled: false, map: {} };
+try {
+    weekdayConfig = { enabled: false, map: {}, ...JSON.parse(localStorage.getItem('timetable_weekday_map') || '{}') };
+} catch (e) { /* デフォルトを使う */ }
+
+let lastDateStr = new Date().toDateString();
+
+function saveWeekdayConfig() {
+    localStorage.setItem('timetable_weekday_map', JSON.stringify(weekdayConfig));
+}
+
+function onWeekdayEnabledChange(on) {
+    weekdayConfig.enabled = on;
+    saveWeekdayConfig();
+    renderWeekdayGrid();
+    if (on && tryWeekdayAutoLoad(true)) {
+        applyLoadedSchedule();
+    }
+}
+
+function onWeekdayAssignChange(day, name) {
+    weekdayConfig.map[day] = name;
+    saveWeekdayConfig();
+    // 今日の割当を変えた場合は即反映
+    if (weekdayConfig.enabled && day === new Date().getDay() && name && tryWeekdayAutoLoad(true)) {
+        applyLoadedSchedule();
+    }
+}
+
+function renderWeekdayGrid() {
+    const grid = $('weekday-grid');
+    $('weekday-enabled').checked = !!weekdayConfig.enabled;
+    grid.style.display = weekdayConfig.enabled ? '' : 'none';
+    if (!weekdayConfig.enabled) return;
+
+    const saved = JSON.parse(localStorage.getItem('saved_timetables') || '{}');
+    const names = Object.keys(saved);
+    const today = new Date().getDay();
+    grid.innerHTML = '';
+
+    [1, 2, 3, 4, 5, 6, 0].forEach((day) => {
+        const cell = document.createElement('div');
+        cell.className = 'weekday-cell' + (day === today ? ' today' : '');
+        const current = weekdayConfig.map[day] || '';
+        const options = ['<option value="">-- なし --</option>']
+            .concat(names.map((n) => `<option value="${escapeHtml(n)}" ${n === current ? 'selected' : ''}>${escapeHtml(n)}</option>`))
+            .join('');
+        cell.innerHTML = `
+            <label>${WEEKDAY_LABELS[day]}曜日${day === today ? ' (今日)' : ''}</label>
+            <select onchange="onWeekdayAssignChange(${day}, this.value)">${options}</select>
+        `;
+        grid.appendChild(cell);
+    });
+}
+
+/* 今日の曜日に割り当てられたスケジュールをデータとして読み込む。
+   成功時 true (画面反映は呼び出し側で applyLoadedSchedule する) */
+function tryWeekdayAutoLoad(showNotice = false) {
+    if (!weekdayConfig.enabled) return false;
+    const day = new Date().getDay();
+    const name = weekdayConfig.map[day];
+    if (!name) return false;
+
+    const saved = JSON.parse(localStorage.getItem('saved_timetables') || '{}');
+    if (!saved[name]) return false;
+
+    baseStartTimeStr = saved[name].baseStartTimeStr || "08:00";
+    timetableRaw = (saved[name].timetableRaw || []).map((item) => {
+        if (item.alertMin === undefined) item.alertMin = 0;
+        return item;
+    });
+    currentScheduleName = name;
+    localStorage.setItem('timetable_current_name', name);
+    if (showNotice) {
+        showToast(`${WEEKDAY_LABELS[day]}曜日のスケジュール「${name}」を読み込みました`);
+    }
+    return true;
+}
+
+/* データ読込後の共通反映処理 */
+function applyLoadedSchedule() {
+    editTargetIndex = -1;
+    insertTargetIndex = -1;
+    clearDirty();
+    rebuildParsed();
+    if (progressMode === 'manual') {
+        manualLoadIndex(0);
+        manualRunning = false;
+    } else {
+        startClockSync();
+    }
+    saveAutoBackup();
+    renderTimetableList();
+    updateDisplayOnly();
+}
+
+/* 日付が変わったら曜日スケジュールに切り替える */
+function handleDateRollover() {
+    if (!weekdayConfig.enabled) return;
+    if (isDirty) return; // 未保存の編集を上書きしない
+    if (tryWeekdayAutoLoad(true)) {
+        applyLoadedSchedule();
+    }
+    renderWeekdayGrid(); // 「(今日)」表示の更新
+}
+
+/* =============================================================
    キーボードショートカット
 ============================================================= */
 document.addEventListener('keydown', (e) => {
@@ -475,7 +676,8 @@ document.addEventListener('keydown', (e) => {
 
     if (e.key === 'Escape') {
         if (modalOpen) {
-            modalOpen.classList.remove('active');
+            if (modalOpen.id === 'onboarding-modal') finishOnboarding();
+            else modalOpen.classList.remove('active');
             return;
         }
         if ($('timer-area').classList.contains('ios-fullscreen') && !isViewOnly) {
@@ -641,11 +843,16 @@ function updateActiveRowHighlight() {
    メインループ (1秒ごと)
 ============================================================= */
 function tick() {
+    const now = new Date();
+    const ds = now.toDateString();
+    if (ds !== lastDateStr) {
+        lastDateStr = ds;
+        handleDateRollover();
+    }
     if (progressMode === 'manual') {
         manualTick();
         return;
     }
-    const now = new Date();
     if (isPaused) {
         updateDisplayOnly();
         return;
@@ -1622,6 +1829,9 @@ function updateLoadSelectOptions() {
         opt.textContent = name;
         select.appendChild(opt);
     });
+
+    // 曜日割当のプルダウンにも反映
+    if ($('weekday-grid')) renderWeekdayGrid();
 }
 
 function saveAutoBackup() {
@@ -1811,8 +2021,14 @@ function initLoad() {
     // 1. URL共有パラメータを優先チェック
     const loadedFromUrl = checkUrlShareParams();
 
+    // 2. 曜日別自動切替 (有効時)
+    let loadedFromWeekday = false;
     if (!loadedFromUrl) {
-        // 2. 自動バックアップをチェック
+        loadedFromWeekday = tryWeekdayAutoLoad();
+    }
+
+    if (!loadedFromUrl && !loadedFromWeekday) {
+        // 3. 自動バックアップをチェック
         const checkBackup = localStorage.getItem('timetable_autobackup');
         let hasValidBackup = false;
 
@@ -1883,6 +2099,13 @@ function initLoad() {
     });
 
     updateWakeLock();
+
+    renderWeekdayGrid();
+
+    // 初回起動時のみ使い方ガイドを表示
+    if (!isViewOnly && !loadedFromUrl && !localStorage.getItem('onboarding_done')) {
+        openOnboarding();
+    }
 
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js').catch(() => { /* file://等では失敗してよい */ });
