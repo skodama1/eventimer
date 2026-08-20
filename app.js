@@ -216,6 +216,112 @@ const defaultPresetTimetables = {
             { duration: 10, title: "決定事項の整理", sound: true, alertMin: 2 },
             { duration: 5, title: "次回までのアクション確認", sound: true, alertMin: 1 }
         ]
+    },
+    "結婚式披露宴｜2.5時間": {
+        baseStartTimeStr: "12:00",
+        timetableRaw: [
+            { duration: 15, title: "迎賓・受付", sound: true, alertMin: 2 },
+            { duration: 10, title: "新郎新婦入場・開宴", sound: true, alertMin: 1 },
+            { duration: 5, title: "ウェルカムスピーチ", sound: true, alertMin: 1 },
+            { duration: 5, title: "乾杯", sound: true, alertMin: 1 },
+            { duration: 30, title: "食事・歓談", sound: true, alertMin: 5 },
+            { duration: 15, title: "余興", sound: true, alertMin: 2 },
+            { duration: 20, title: "お色直し中座", sound: true, alertMin: 3 },
+            { duration: 15, title: "再入場・演出", sound: true, alertMin: 2 },
+            { duration: 5, title: "祝電披露", sound: true, alertMin: 1 },
+            { duration: 15, title: "両親への手紙・花束贈呈", sound: true, alertMin: 2 },
+            { duration: 10, title: "謝辞", sound: true, alertMin: 2 },
+            { duration: 15, title: "送賓", sound: true, alertMin: 2 }
+        ]
+    },
+    "発表会・お遊戯会": {
+        baseStartTimeStr: "09:30",
+        timetableRaw: [
+            { duration: 20, title: "開場・受付", sound: true, alertMin: 2 },
+            { duration: 5, title: "開会のことば", sound: true, alertMin: 1 },
+            { duration: 15, title: "プログラム①", sound: true, alertMin: 2 },
+            { duration: 15, title: "プログラム②", sound: true, alertMin: 2 },
+            { duration: 15, title: "プログラム③", sound: true, alertMin: 2 },
+            { duration: 10, title: "休憩", sound: true, alertMin: 2 },
+            { duration: 15, title: "プログラム④", sound: true, alertMin: 2 },
+            { duration: 15, title: "プログラム⑤", sound: true, alertMin: 2 },
+            { duration: 15, title: "プログラム⑥", sound: true, alertMin: 2 },
+            { duration: 5, title: "閉会のことば", sound: true, alertMin: 1 }
+        ]
+    },
+    "セミナー・講演会｜半日": {
+        baseStartTimeStr: "13:00",
+        timetableRaw: [
+            { duration: 30, title: "受付・開場", sound: true, alertMin: 2 },
+            { duration: 10, title: "開会挨拶", sound: true, alertMin: 2 },
+            { duration: 50, title: "講演①", sound: true, alertMin: 5 },
+            { duration: 10, title: "休憩", sound: true, alertMin: 2 },
+            { duration: 50, title: "講演②", sound: true, alertMin: 5 },
+            { duration: 10, title: "休憩", sound: true, alertMin: 2 },
+            { duration: 20, title: "質疑応答", sound: true, alertMin: 3 },
+            { duration: 10, title: "まとめ", sound: true, alertMin: 2 },
+            { duration: 10, title: "閉会・アンケート", sound: true, alertMin: 2 }
+        ]
+    },
+    "勉強会・LT大会｜2時間": {
+        baseStartTimeStr: "19:00",
+        timetableRaw: [
+            { duration: 15, title: "開場・受付", sound: true, alertMin: 2 },
+            { duration: 5, title: "オープニング", sound: true, alertMin: 1 },
+            { duration: 30, title: "メインセッション", sound: true, alertMin: 5 },
+            { duration: 10, title: "休憩", sound: true, alertMin: 2 },
+            { duration: 5, title: "LT①", sound: true, alertMin: 1 },
+            { duration: 5, title: "LT②", sound: true, alertMin: 1 },
+            { duration: 5, title: "LT③", sound: true, alertMin: 1 },
+            { duration: 5, title: "LT④", sound: true, alertMin: 1 },
+            { duration: 5, title: "LT⑤", sound: true, alertMin: 1 },
+            { duration: 10, title: "クロージング", sound: true, alertMin: 2 },
+            { duration: 15, title: "懇親・撤収", sound: true, alertMin: 2 }
+        ]
+    },
+    "定期テスト｜5教科": {
+        baseStartTimeStr: "08:30",
+        timetableRaw: [
+            { duration: 10, title: "諸注意・問題配布", sound: true, alertMin: 1 },
+            { duration: 50, title: "1限 国語", sound: true, alertMin: 5 },
+            { duration: 15, title: "休憩", sound: true, alertMin: 2 },
+            { duration: 50, title: "2限 数学", sound: true, alertMin: 5 },
+            { duration: 15, title: "休憩", sound: true, alertMin: 2 },
+            { duration: 50, title: "3限 英語", sound: true, alertMin: 5 },
+            { duration: 45, title: "昼休み", sound: true, alertMin: 5 },
+            { duration: 50, title: "4限 理科", sound: true, alertMin: 5 },
+            { duration: 15, title: "休憩", sound: true, alertMin: 2 },
+            { duration: 50, title: "5限 社会", sound: true, alertMin: 5 },
+            { duration: 10, title: "回収・連絡", sound: true, alertMin: 1 }
+        ]
+    },
+    "ポモドーロ作業｜2時間": {
+        baseStartTimeStr: "09:00",
+        timetableRaw: [
+            { duration: 25, title: "作業① 集中", sound: true, alertMin: 1 },
+            { duration: 5, title: "小休憩", sound: true, alertMin: 1 },
+            { duration: 25, title: "作業② 集中", sound: true, alertMin: 1 },
+            { duration: 5, title: "小休憩", sound: true, alertMin: 1 },
+            { duration: 25, title: "作業③ 集中", sound: true, alertMin: 1 },
+            { duration: 5, title: "小休憩", sound: true, alertMin: 1 },
+            { duration: 25, title: "作業④ 集中", sound: true, alertMin: 1 },
+            { duration: 15, title: "長め休憩", sound: true, alertMin: 2 }
+        ]
+    },
+    "運動会｜午前の部": {
+        baseStartTimeStr: "08:45",
+        timetableRaw: [
+            { duration: 15, title: "開会式", sound: true, alertMin: 2 },
+            { duration: 10, title: "準備運動", sound: true, alertMin: 1 },
+            { duration: 20, title: "徒競走 (低学年)", sound: true, alertMin: 3 },
+            { duration: 20, title: "徒競走 (中学年)", sound: true, alertMin: 3 },
+            { duration: 20, title: "徒競走 (高学年)", sound: true, alertMin: 3 },
+            { duration: 10, title: "休憩・給水", sound: true, alertMin: 2 },
+            { duration: 15, title: "玉入れ", sound: true, alertMin: 2 },
+            { duration: 15, title: "綱引き", sound: true, alertMin: 2 },
+            { duration: 25, title: "全員リレー", sound: true, alertMin: 3 },
+            { duration: 10, title: "閉会式 (午前)", sound: true, alertMin: 2 }
+        ]
     }
 };
 
