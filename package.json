@@ -1,0 +1,17 @@
+{
+  "name": "eventimer",
+  "version": "1.0.0",
+  "description": "学校・イベント・会議の進行を「時間割」で管理するスケジュール式タイマー。 ブラウザだけで動作し、PWAとしてホーム画面へのインストールやオフライン利用にも対応。",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@capacitor/android": "^7.6.8",
+    "@capacitor/cli": "^7.6.8",
+    "@capacitor/core": "^7.6.8"
+  }
+}

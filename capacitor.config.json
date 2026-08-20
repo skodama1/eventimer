@@ -1,0 +1,8 @@
+{
+    "appId": "com.najimillc.protimer",
+    "appName": "ProTimer",
+    "webDir": "www",
+    "android": {
+        "allowMixedContent": false
+    }
+}

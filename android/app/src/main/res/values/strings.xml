@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">ProTimer</string>
+    <string name="title_activity_main">ProTimer</string>
+    <string name="package_name">com.najimillc.protimer</string>
+    <string name="custom_url_scheme">com.najimillc.protimer</string>
+</resources>

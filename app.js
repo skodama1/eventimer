@@ -2107,7 +2107,8 @@ function initLoad() {
         openOnboarding();
     }
 
-    if ('serviceWorker' in navigator) {
+    // ネイティブアプリ(Capacitor)内ではService Worker不要
+    if ('serviceWorker' in navigator && !window.Capacitor) {
         navigator.serviceWorker.register('sw.js').catch(() => { /* file://等では失敗してよい */ });
     }
 }
