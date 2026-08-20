@@ -37,6 +37,18 @@ let dragSrcIndex = null;
 
 const $ = (id) => document.getElementById(id);
 
+const APP_VERSION = '1.0.0';
+
+/* ユーザー設定 (localStorageに永続化) */
+let settings = { volume: 50, wakeLock: true, notify: false };
+try {
+    settings = { ...settings, ...JSON.parse(localStorage.getItem('timer_settings') || '{}') };
+} catch (e) { /* 破損時はデフォルトを使う */ }
+
+function saveSettings() {
+    localStorage.setItem('timer_settings', JSON.stringify(settings));
+}
+
 function escapeHtml(s) {
     return String(s)
         .replace(/&/g, '&amp;')
@@ -341,6 +353,8 @@ function initAudio() {
 /* kind: 'end' = 終了音(長め1回) / 'warn' = 警告音(短め2回) */
 function playBeep(kind = 'end') {
     if (!audioCtx) return;
+    const volume = Math.max(0, Math.min(1, (settings.volume ?? 50) / 100));
+    if (volume === 0) return;
     try {
         const t = audioCtx.currentTime;
         const mk = (start, dur, freq) => {
@@ -350,7 +364,7 @@ function playBeep(kind = 'end') {
             gain.connect(audioCtx.destination);
             osc.type = 'sine';
             osc.frequency.setValueAtTime(freq, t + start);
-            gain.gain.setValueAtTime(0.5, t + start);
+            gain.gain.setValueAtTime(volume, t + start);
             osc.start(t + start);
             osc.stop(t + start + dur);
         };
@@ -364,6 +378,133 @@ function playBeep(kind = 'end') {
         console.log("Audio play error:", e);
     }
 }
+
+/* =============================================================
+   画面スリープ防止 (Wake Lock)
+============================================================= */
+let wakeLockSentinel = null;
+
+async function updateWakeLock() {
+    const want = settings.wakeLock && !document.hidden && ('wakeLock' in navigator);
+    if (want && !wakeLockSentinel) {
+        try {
+            wakeLockSentinel = await navigator.wakeLock.request('screen');
+            wakeLockSentinel.addEventListener('release', () => { wakeLockSentinel = null; });
+        } catch (e) {
+            wakeLockSentinel = null; // 省電力モード等で拒否されることがある
+        }
+    } else if (!want && wakeLockSentinel) {
+        try { wakeLockSentinel.release(); } catch (e) { /* noop */ }
+        wakeLockSentinel = null;
+    }
+}
+document.addEventListener('visibilitychange', () => { updateWakeLock(); });
+
+/* =============================================================
+   終了通知 (Notification API)
+============================================================= */
+function notifyProgramEnd(endedTitle, nextTitle) {
+    if (!settings.notify || !('Notification' in window) || Notification.permission !== 'granted') return;
+    if (!document.hidden) return; // 画面を見ている時は不要
+    try {
+        new Notification('プログラム終了', {
+            body: nextTitle ? `「${endedTitle}」が終了しました。次は「${nextTitle}」` : `「${endedTitle}」が終了しました`,
+            icon: 'icons/icon-192.png',
+            tag: 'protimer-end'
+        });
+    } catch (e) { /* noop */ }
+}
+
+/* =============================================================
+   設定モーダル
+============================================================= */
+function openSettingsModal() {
+    syncSettingsUI();
+    $('settings-modal').classList.add('active');
+}
+
+function closeSettingsModal() {
+    $('settings-modal').classList.remove('active');
+}
+
+function syncSettingsUI() {
+    $('setting-volume').value = settings.volume;
+    $('setting-volume-value').textContent = `${settings.volume}%`;
+    $('setting-wakelock').checked = !!settings.wakeLock;
+    $('setting-notify').checked = !!(settings.notify && ('Notification' in window) && Notification.permission === 'granted');
+}
+
+function testBeep() {
+    initAudio();
+    playBeep('end');
+}
+
+function onWakeLockSettingChange(on) {
+    settings.wakeLock = on;
+    saveSettings();
+    updateWakeLock();
+}
+
+function onNotifySettingChange(on) {
+    if (!on) {
+        settings.notify = false;
+        saveSettings();
+        return;
+    }
+    if (!('Notification' in window)) {
+        showToast('このブラウザは通知に対応していません');
+        $('setting-notify').checked = false;
+        return;
+    }
+    Notification.requestPermission().then((p) => {
+        settings.notify = (p === 'granted');
+        saveSettings();
+        syncSettingsUI();
+        if (p !== 'granted') showToast('ブラウザの通知が許可されませんでした');
+    });
+}
+
+/* =============================================================
+   キーボードショートカット
+============================================================= */
+document.addEventListener('keydown', (e) => {
+    const t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT')) return;
+
+    const modalOpen = document.querySelector('.modal-overlay.active');
+
+    if (e.key === 'Escape') {
+        if (modalOpen) {
+            modalOpen.classList.remove('active');
+            return;
+        }
+        if ($('timer-area').classList.contains('ios-fullscreen') && !isViewOnly) {
+            toggleFullscreen();
+        }
+        return;
+    }
+    if (modalOpen) return;
+
+    if (e.key === 'f' || e.key === 'F') {
+        toggleFullscreen();
+        return;
+    }
+    if (isViewOnly) return;
+
+    if (e.code === 'Space') {
+        e.preventDefault();
+        if (timetableRaw.length === 0) return;
+        if (progressMode === 'manual') {
+            if (manualRunning) pauseTimer(); else startTimer();
+        } else {
+            if (timerRunning && !isPaused) pauseTimer(); else startTimer();
+        }
+    } else if (e.key === 'ArrowRight' && progressMode === 'manual') {
+        manualNext();
+    } else if (e.key === 'ArrowLeft' && progressMode === 'manual') {
+        manualPrev();
+    }
+});
 
 /* =============================================================
    時刻ユーティリティ
@@ -534,8 +675,10 @@ function checkAndSyncTime(now) {
     const current = timetableParsed[currentIndex];
     if (now >= current.end) {
         if (current.sound) playBeep('end');
+        const endedTitle = current.title;
         autoSelectCurrentIndex();
         clockAlertedIndex = -1;
+        notifyProgramEnd(endedTitle, currentIndex >= 0 ? timetableParsed[currentIndex].title : null);
 
         if (currentIndex === -1) {
             const totalEnd = timetableParsed[timetableParsed.length - 1].end;
@@ -591,6 +734,8 @@ function manualTick() {
         if (!manualEnded && manualRemaining <= 0) {
             manualEnded = true;
             if (item.sound) playBeep('end');
+            const next = timetableRaw[manualIndex + 1];
+            notifyProgramEnd(item.title, next ? next.title : null);
         }
     }
     updateDisplayOnly();
@@ -912,6 +1057,7 @@ function toggleFullscreen() {
         initAudio();
         resetMouseTimer();
     }
+    updateWakeLock();
 }
 
 /* =============================================================
@@ -1725,6 +1871,22 @@ function initLoad() {
 
     renderTimetableList();
     updateDisplayOnly();
+
+    /* ---- 製品情報・設定・PWA ---- */
+    $('app-footer').textContent = `ProTimer v${APP_VERSION}`;
+    $('settings-version').textContent = `ProTimer v${APP_VERSION}`;
+
+    $('setting-volume').addEventListener('input', (e) => {
+        settings.volume = parseInt(e.target.value, 10) || 0;
+        $('setting-volume-value').textContent = `${settings.volume}%`;
+        saveSettings();
+    });
+
+    updateWakeLock();
+
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').catch(() => { /* file://等では失敗してよい */ });
+    }
 }
 
 initLoad();

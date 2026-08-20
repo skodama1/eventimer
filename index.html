@@ -4,10 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>イベントプログラムタイマー</title>
+    <meta name="description" content="スケジュール式の進行タイマー。学校・イベント・会議の進行管理に。">
+    <meta name="theme-color" content="#07090d">
 
     <meta name="apple-mobile-web-app-title" content="ProTimer">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-    <link rel="apple-touch-icon" href="https://drive.google.com/uc?export=view&id=1GX6rNN9sU3XtTOcfncRZedDXnRqQsyDC">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 
     <!-- QRコード生成ライブラリ -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -51,12 +58,19 @@
     <symbol id="i-list" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></symbol>
     <symbol id="i-chev-up" viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></symbol>
     <symbol id="i-chev-down" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></symbol>
+    <symbol id="i-keyboard" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="6" y1="10" x2="6" y2="10.01"/><line x1="10" y1="10" x2="10" y2="10.01"/><line x1="14" y1="10" x2="14" y2="10.01"/><line x1="18" y1="10" x2="18" y2="10.01"/><line x1="8" y1="14" x2="16" y2="14"/></symbol>
 </svg>
 
 <div class="container">
     <h1><svg class="icon"><use href="#i-timer"/></svg><span>PROGRAM TIMER</span></h1>
 
     <div id="timer-area" class="card timer-display">
+        <button class="settings-btn icon-btn" onclick="openSettingsModal()" title="設定">
+            <svg class="icon"><use href="#i-settings"/></svg>
+        </button>
         <button class="fullscreen-btn" onclick="toggleFullscreen()">
             <svg class="icon"><use href="#i-maximize"/></svg><span>全画面</span>
         </button>
@@ -188,6 +202,8 @@
                 <svg class="icon"><use href="#i-plus"/></svg>追加する</button>
         </div>
     </div>
+
+    <footer class="app-footer" id="app-footer"></footer>
 </div>
 
 <!-- 共有/入出力用モーダル -->
@@ -218,6 +234,54 @@
                 <input type="file" id="import-file-input" accept=".json" style="display:none;" onchange="importFromJsonFile(event)">
             </div>
         </div>
+    </div>
+</div>
+
+<!-- 設定モーダル -->
+<div id="settings-modal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><svg class="icon"><use href="#i-settings"/></svg>設定</h3>
+            <button class="icon-btn" onclick="closeSettingsModal()"><svg class="icon"><use href="#i-x"/></svg></button>
+        </div>
+
+        <div class="modal-section">
+            <h4><svg class="icon"><use href="#i-volume"/></svg> サウンド</h4>
+            <div class="settings-row">
+                <label for="setting-volume" class="settings-label">音量</label>
+                <input type="range" id="setting-volume" min="0" max="100" step="5">
+                <span id="setting-volume-value" class="settings-value">50%</span>
+                <button onclick="testBeep()" style="padding:5px 12px; font-size:0.78rem;">テスト</button>
+            </div>
+        </div>
+
+        <div class="modal-section">
+            <h4><svg class="icon"><use href="#i-sun"/></svg> 画面</h4>
+            <label class="settings-row settings-check">
+                <input type="checkbox" id="setting-wakelock" onchange="onWakeLockSettingChange(this.checked)">
+                <span>画面のスリープを防止する (タイマー表示中に画面が消えなくなります)</span>
+            </label>
+        </div>
+
+        <div class="modal-section">
+            <h4><svg class="icon"><use href="#i-bell"/></svg> 通知</h4>
+            <label class="settings-row settings-check">
+                <input type="checkbox" id="setting-notify" onchange="onNotifySettingChange(this.checked)">
+                <span>プログラム終了時に通知を表示する (別のタブ/アプリを見ている時)</span>
+            </label>
+        </div>
+
+        <div class="modal-section modal-section-divided">
+            <h4><svg class="icon"><use href="#i-keyboard"/></svg> キーボードショートカット</h4>
+            <div class="shortcut-list">
+                <div><kbd>Space</kbd><span>スタート / 一時停止</span></div>
+                <div><kbd>←</kbd> <kbd>→</kbd><span>前へ / 次へ (手動進行モード)</span></div>
+                <div><kbd>F</kbd><span>全画面切替</span></div>
+                <div><kbd>Esc</kbd><span>全画面・ダイアログを閉じる</span></div>
+            </div>
+        </div>
+
+        <div class="settings-version" id="settings-version"></div>
     </div>
 </div>
 
