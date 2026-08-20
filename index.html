@@ -4,475 +4,164 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>イベントプログラムタイマー</title>
-    
+
     <meta name="apple-mobile-web-app-title" content="ProTimer">
-    
+
     <link rel="apple-touch-icon" href="https://drive.google.com/uc?export=view&id=1GX6rNN9sU3XtTOcfncRZedDXnRqQsyDC">
 
     <!-- QRコード生成ライブラリ -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
-    <style>
-        :root {
-            --bg-color: #000000;
-            --card-bg: #121212; 
-            --text-color: #aaaaaa; 
-            --title-color: #ffffff;
-            --accent-color: #00ff00; /* 蛍光グリーン */
-            --alert-color: #ff3333;  /* 警告レッド */
-            --clock-color: #00ffff;  /* シアン */
-            
-            --btn-bg: #222222;
-            --btn-text: #888888;
-            --btn-hover: #333333;
-            --btn-border: #444444;
+    <!-- フォント -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
 
-            /* 表の枠線用カラー */
-            --table-border: #383838;
-        }
-
-        body {
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        body:has(.ios-fullscreen) {
-            overflow: hidden !important;
-        }
-
-        .container {
-            max-width: 850px;
-            width: 100%;
-        }
-
-        h1 {
-            text-align: center;
-            color: #666666; 
-            font-size: 1.2rem;
-            font-weight: normal;
-        }
-
-        .card {
-            background: var(--card-bg);
-            border-radius: 8px;
-            padding: 20px;
-            border: 1px solid var(--table-border);
-            margin-bottom: 20px;
-            position: relative;
-        }
-
-        /* タイマー表示部分（上部固定化） */
-        .timer-display {
-            text-align: center;
-            padding: 30px 20px;
-            transition: all 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-
-            /* 📌 スクロール時もタイマーを画面上部に固定 */
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            background: var(--card-bg);
-        }
-
-        /* 疑似フルスクリーンクラス */
-        .timer-display.ios-fullscreen {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            z-index: 9999 !important;
-            background-color: #000000 !important;
-            display: flex !important;
-            flex-direction: column !important;
-            justify-content: center !important;
-            align-items: center !important;
-            box-sizing: border-box !important;
-            padding: 5vh 5vw !important;
-            margin: 0 !important;
-            border: none !important;
-            border-radius: 0 !important;
-            overflow: hidden;
-        }
-
-        /* 全画面表示時にマウスカーソルを非表示にするクラス */
-        .timer-display.ios-fullscreen.hide-cursor {
-            cursor: none !important;
-        }
-        .timer-display.ios-fullscreen.hide-cursor * {
-            cursor: none !important;
-        }
-
-        /* スケジュール名表示用スタイル */
-        .schedule-name-display {
-            font-size: 0.9rem;
-            color: #888888;
-            margin-top: 15px;
-            font-weight: bold;
-            order: 7;
-        }
-        .timer-display.ios-fullscreen .schedule-name-display {
-            font-size: 2.0rem;
-            color: #aaaaaa;
-            margin-top: 2.5vh;
-            margin-bottom: 0;
-        }
-
-        /* 日付・時刻共通スタイル */
-        .top-info {
-            font-size: 1.2rem;
-            color: var(--clock-color);
-            font-family: monospace;
-            margin-bottom: 10px;
-            opacity: 0.8;
-            letter-spacing: 2px;
-            order: 2; 
-        }
-        .timer-display.ios-fullscreen .top-info {
-            font-size: 3.8rem;
-            margin-bottom: 3vh;
-            opacity: 0.9;
-        }
-
-        /* プログラムタイトル */
-        .current-title {
-            font-size: 1.8rem;
-            font-weight: bold;
-            margin-bottom: 10px;
-            color: var(--title-color);
-            order: 3;
-        }
-        .timer-display.ios-fullscreen .current-title {
-            font-size: 4.5rem;
-            margin-bottom: 1vh;
-        }
-
-        /* タイマー数字 */
-        .time-left {
-            font-size: 5.5rem;
-            font-weight: bold;
-            font-family: monospace;
-            color: var(--accent-color);
-            text-shadow: 0 0 12px rgba(0, 255, 0, 0.4);
-            margin: 5px 0;
-            order: 4;
-            width: 100%;
-            white-space: nowrap;
-        }
-        .timer-display.ios-fullscreen .time-left {
-            font-size: 32vh;
-            line-height: 1;
-            margin: 2vh 0;
-            text-shadow: 0 0 35px rgba(0, 255, 0, 0.8);
-        }
-
-        /* アラート状態のスタイル */
-        .time-left.alert-mode {
-            color: var(--alert-color) !important;
-            text-shadow: 0 0 12px rgba(255, 51, 51, 0.6) !important;
-            animation: blink 1s step-end infinite;
-        }
-        .timer-display.ios-fullscreen .time-left.alert-mode {
-            text-shadow: 0 0 35px rgba(255, 51, 51, 0.9) !important;
-        }
-
-        @keyframes blink {
-            50% { opacity: 0.3; }
-        }
-
-        .sec-red {
-            font-size: 0.7em;
-            color: #ff3333;
-            text-shadow: 0 0 12px rgba(255, 51, 51, 0.5);
-        }
-        .timer-display.ios-fullscreen .sec-red {
-            text-shadow: 0 0 35px rgba(255, 51, 51, 0.8);
-        }
-
-        .next-title {
-            font-size: 1.1rem;
-            color: #666666;
-            order: 5;
-        }
-        .timer-display.ios-fullscreen .next-title {
-            font-size: 2.5rem;
-            color: #555555;
-            margin-top: 2vh;
-        }
-
-        .controls {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 20px;
-            min-height: 38px;
-            order: 6;
-        }
-
-        button {
-            padding: 8px 16px;
-            font-size: 0.9rem;
-            background-color: var(--btn-bg);
-            color: var(--btn-text);
-            border: 1px solid var(--btn-border);
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s;
-            -webkit-appearance: none; 
-        }
-        button:hover {
-            background-color: var(--btn-hover);
-            color: #ffffff;
-            border-color: #666666;
-        }
-        button:disabled {
-            background-color: #0a0a0a;
-            border-color: #1a1a1a;
-            color: #333333;
-            cursor: not-allowed;
-        }
-
-        .fullscreen-btn {
-            position: absolute;
-            top: 20px; 
-            right: 20px;
-            font-size: 0.8rem;
-            z-index: 10000;
-            order: 0;
-        }
-        .timer-display.ios-fullscreen .fullscreen-btn {
-            top: 20px !important;
-            right: 20px !important;
-            font-size: 1.2rem;
-            opacity: 0.4;
-            position: absolute !important;
-        }
-        .fullscreen-btn:hover {
-            opacity: 1.0;
-        }
-
-        /* タイムテーブル設定フォーム */
-        .form-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 5px; }
-        .form-row .form-group { display: flex; flex-direction: column; gap: 5px; }
-        .form-row .form-group.flex-grow { flex: 1; min-width: 180px; }
-        label { font-size: 0.8rem; color: #666666; }
-        input[type="time"], input[type="text"], input[type="number"], select { background-color: #161616; border: 1px solid #333; border-radius: 4px; color: #999999; padding: 8px; font-size: 0.9rem; font-family: monospace; box-sizing: border-box; -webkit-appearance: none; }
-        input[type="text"], select { font-family: sans-serif; }
-        input:focus, select:focus { outline: none; border-color: #555555; color: #ffffff; }
-        input[type="number"] { width: 90px; }
-        
-        .table-list { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9rem; }
-        .table-list th, .table-list td { border: 1px solid var(--table-border); padding: 10px; text-align: left; }
-        .table-list th { background-color: #161616; color: #888888; }
-        
-        .active-row { background-color: #1a252f !important; color: #ffffff; border-left: 4px solid var(--accent-color); }
-        .storage-zone { padding-bottom: 15px; margin-bottom: 15px; border-bottom: 1px dashed var(--table-border); display: flex; flex-wrap: wrap; gap: 15px; align-items: center; }
-
-        .inline-edit-input { width: 100%; box-sizing: border-box; }
-        .inline-edit-num { width: 70px !important; }
-        .insert-row { background-color: #1e1e1e !important; border-left: 4px solid #00ffff; }
-
-        /* モーダルダイアログ用スタイル */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0,0,0,0.7);
-            z-index: 20000;
-            justify-content: center;
-            align-items: center;
-        }
-        .modal-overlay.active { display: flex; }
-        .modal-content {
-            background: #1a1a1a;
-            border: 1px solid #444;
-            border-radius: 8px;
-            width: 90%;
-            max-width: 500px;
-            padding: 20px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.8);
-            color: #ddd;
-        }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px; }
-        .modal-header h3 { margin: 0; font-size: 1.1rem; color: #fff; }
-        .modal-section { margin-bottom: 20px; }
-        .modal-section h4 { margin: 0 0 8px 0; font-size: 0.95rem; color: #00ffff; }
-        .qr-container { display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 10px; background: #fff; padding: 10px; border-radius: 8px; width: fit-content; margin: 10px auto; }
-
-        /* 横画面時レスポンシブ */
-        @media (max-height: 440px) and (orientation: landscape) {
-            .timer-display.ios-fullscreen { 
-                padding: 2vh 6vw !important;
-            }
-            .timer-display.ios-fullscreen .schedule-name-display { font-size: 1.2rem !important; margin-top: 1vh !important; }
-            .timer-display.ios-fullscreen .top-info { font-size: 1.6rem !important; margin-bottom: 1vh !important; }
-            .timer-display.ios-fullscreen .current-title { font-size: 2.0rem !important; margin-bottom: 0 !important; }
-            .timer-display.ios-fullscreen .time-left { 
-                font-size: 40vh !important; 
-                margin: 0 !important; 
-            }
-            .timer-display.ios-fullscreen .next-title { font-size: 1.3rem !important; margin-top: 1vh !important; }
-            .timer-display.ios-fullscreen .fullscreen-btn { top: 8px !important; right: 8px !important; font-size: 0.8rem !important; padding: 4px 8px !important; }
-            .timer-display.ios-fullscreen .controls { margin-top: 5px !important; }
-        }
-
-        @media (max-width: 600px) {
-            .table-list { font-size: 0.75rem; }
-            .table-list th, .table-list td { padding: 6px 4px; }
-        }
-
-        /* 縦画面レスポンシブ */
-        @media (max-width: 480px) and (orientation: portrait) {
-            .timer-display:not(.ios-fullscreen) {
-                padding: 15px 10px !important;
-            }
-            .timer-display:not(.ios-fullscreen) .fullscreen-btn {
-                position: static !important;
-                margin-bottom: 15px;
-                width: auto;
-            }
-            .timer-display:not(.ios-fullscreen) .schedule-name-display {
-                font-size: 0.85rem !important;
-                margin-top: 10px !important;
-            }
-            .timer-display:not(.ios-fullscreen) .top-info {
-                font-size: 1.1rem !important;
-                letter-spacing: 1px !important;
-                margin-bottom: 8px !important;
-            }
-            .timer-display:not(.ios-fullscreen) .time-left {
-                font-size: 4.2rem !important; 
-                letter-spacing: -1px;
-            }
-            .timer-display:not(.ios-fullscreen) .sec-red {
-                font-size: 0.75em !important;
-            }
-            .timer-display:not(.ios-fullscreen) .next-title {
-                font-size: 1.0rem !important;
-            }
-
-            .timer-display.ios-fullscreen {
-                padding: 6vh 4vw !important;
-                justify-content: center !important; 
-            }
-            .timer-display.ios-fullscreen .fullscreen-btn {
-                position: absolute !important;
-                top: 20px !important;
-                right: 20px !important;
-                margin: 0 !important;
-                font-size: 0.9rem !important;
-                opacity: 0.5;
-            }
-            .timer-display.ios-fullscreen .schedule-name-display {
-                font-size: 1.4rem !important;
-                margin-top: 2vh !important;
-            }
-            .timer-display.ios-fullscreen .top-info {
-                font-size: 1.0rem !important; 
-                margin-bottom: 4vh !important;
-                letter-spacing: 1px !important;
-            }
-            .timer-display.ios-fullscreen .current-title {
-                font-size: 2.2rem !important;
-                margin-bottom: 2vh !important;
-                line-height: 1.3;
-            }
-            .timer-display.ios-fullscreen .time-left {
-                font-size: 17vw !important; 
-                margin: 4vh 0 !important;
-            }
-            .timer-display.ios-fullscreen .sec-red {
-                font-size: 0.75em !important;
-            }
-            .timer-display.ios-fullscreen .next-title {
-                font-size: 1.2rem !important; 
-                color: #555555;
-                margin-top: 4vh !important;
-                line-height: 1.4;
-            }
-            .timer-display.ios-fullscreen .controls {
-                margin-top: 3vh !important;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
+<!-- SVGアイコン定義 (stroke系アイコンセット) -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none;" aria-hidden="true">
+    <symbol id="i-timer" viewBox="0 0 24 24"><line x1="10" y1="2" x2="14" y2="2"/><line x1="12" y1="14" x2="15" y2="11"/><circle cx="12" cy="14" r="8"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+    <symbol id="i-pointer" viewBox="0 0 24 24"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><line x1="13" y1="13" x2="19" y2="19"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></symbol>
+    <symbol id="i-skip-back" viewBox="0 0 24 24"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></symbol>
+    <symbol id="i-skip-forward" viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></symbol>
+    <symbol id="i-maximize" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/></symbol>
+    <symbol id="i-minimize" viewBox="0 0 24 24"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+    <symbol id="i-volume" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></symbol>
+    <symbol id="i-volume-x" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+    <symbol id="i-insert" viewBox="0 0 24 24"><polyline points="15 10 20 15 15 20"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+    <symbol id="i-share" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
+    <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
+    <symbol id="i-grip" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="18" r="1"/></symbol>
+    <symbol id="i-save" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></symbol>
+    <symbol id="i-chev-up" viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></symbol>
+    <symbol id="i-chev-down" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></symbol>
+</svg>
+
 <div class="container">
-    <h1>⏱️ PROGRAM TIMER</h1>
+    <h1><svg class="icon"><use href="#i-timer"/></svg><span>PROGRAM TIMER</span></h1>
 
     <div id="timer-area" class="card timer-display">
-        <button class="fullscreen-btn" onclick="toggleFullscreen()">🗖 全画面化</button>
-        
+        <button class="fullscreen-btn" onclick="toggleFullscreen()">
+            <svg class="icon"><use href="#i-maximize"/></svg><span>全画面</span>
+        </button>
+
         <div id="top-info" class="top-info"></div>
 
         <div id="current-title" class="current-title">プログラムが登録されていません</div>
 
         <div id="time-left" class="time-left">00:00</div>
-        
+
+        <div class="progress-track" id="program-progress" style="display:none;">
+            <div class="progress-fill" id="program-progress-fill"></div>
+        </div>
+
         <div id="next-title" class="next-title">次：--</div>
 
-        <div class="controls" id="timer-controls-zone">
-            <button id="btn-start" onclick="startTimer()">手動スタート</button>
-            <button id="btn-pause" onclick="pauseTimer()" disabled>一時停止</button>
+        <div id="overall-progress" class="overall-progress"></div>
+
+        <div class="mode-toggle" id="mode-toggle" style="display:none;">
+            <button id="mode-clock" class="mode-btn active" onclick="setMode('clock')"
+                title="現在時刻に合わせて自動で進行します">
+                <svg class="icon"><use href="#i-clock"/></svg>時刻同期</button>
+            <button id="mode-manual" class="mode-btn" onclick="setMode('manual')"
+                title="ボタン操作で進行します。時間切れ後は超過時間を表示">
+                <svg class="icon"><use href="#i-pointer"/></svg>手動進行</button>
         </div>
+
+        <div class="controls" id="timer-controls-zone">
+            <button id="btn-prev" onclick="manualPrev()" style="display:none;">
+                <svg class="icon"><use href="#i-skip-back"/></svg>前へ</button>
+            <button id="btn-start" onclick="startTimer()">
+                <svg class="icon"><use href="#i-play"/></svg>スタート</button>
+            <button id="btn-pause" onclick="pauseTimer()" disabled>
+                <svg class="icon"><use href="#i-pause"/></svg>一時停止</button>
+            <button id="btn-next" onclick="manualNext()" style="display:none;">
+                次へ<svg class="icon"><use href="#i-skip-forward"/></svg></button>
+        </div>
+
+        <div id="pause-info" class="pause-info"></div>
 
         <div id="schedule-name" class="schedule-name-display">未選択</div>
     </div>
 
-    <div class="card">
+    <div class="card" id="storage-card">
+        <div id="dirty-banner" class="dirty-banner" style="display:none;">
+            <svg class="icon"><use href="#i-alert"/></svg>
+            <span>未保存の変更があります</span>
+            <button id="dirty-save-btn" onclick="quickSave()">保存</button>
+        </div>
+
         <div class="storage-zone">
             <div class="form-group">
                 <label for="save-name">このスケジュールを保存</label>
-                <div style="display: flex; gap: 5px;">
-                    <input type="text" id="save-name" placeholder="例: 定例会パターンA" style="width: 150px;">
-                    <button onclick="saveTimetableToStorage()">保存</button>
+                <div class="input-row">
+                    <input type="text" id="save-name" placeholder="例: 定例会パターンA">
+                    <button onclick="saveTimetableToStorage()"><svg class="icon"><use href="#i-save"/></svg>保存</button>
                 </div>
             </div>
             <div class="form-group">
                 <label for="load-select">保存済みから呼び出し</label>
-                <div style="display: flex; gap: 5px;">
-                    <select id="load-select" style="width: 150px;">
+                <div class="input-row">
+                    <select id="load-select">
                         <option value="">-- 選択してください --</option>
                     </select>
                     <button onclick="loadTimetableFromStorage()">読込</button>
-                    <button class="btn-delete" onclick="deleteTimetableFromStorage()" style="padding: 8px 12px;">削除</button>
+                    <button class="icon-btn danger" onclick="deleteTimetableFromStorage()" title="選択中の保存データを削除">
+                        <svg class="icon"><use href="#i-trash"/></svg></button>
                 </div>
             </div>
-            <div class="form-group" style="margin-left: auto;">
+            <div class="form-group push-right">
                 <label>外部連携・共有</label>
                 <div>
-                    <button onclick="openShareModal()" style="background:#005580; color:#fff;">📲 書き出し/共有</button>
+                    <button class="btn-accent" onclick="openShareModal()">
+                        <svg class="icon"><use href="#i-share"/></svg>書き出し / 共有</button>
                 </div>
             </div>
         </div>
 
-        <h3 style="color:#888; font-size:1rem; margin-top:0;">📊 進行スケジュール</h3>
-        <table class="table-list">
-            <thead>
-                <tr>
-                    <th style="width: 40px;">順番</th>
-                    <th style="width: 150px;">時間帯/所要時間</th>
-                    <th>プログラム名</th>
-                    <th style="width: 220px; text-align: center;">操作</th>
-                </tr>
-            </thead>
-            <tbody id="timetable-body">
-            </tbody>
-        </table>
+        <div class="table-toolbar">
+            <h3><svg class="icon"><use href="#i-list"/></svg>進行スケジュール</h3>
+            <div class="table-actions">
+                <button onclick="toggleAllSounds()" title="全プログラムの音をまとめてON/OFF">
+                    <svg class="icon"><use href="#i-volume"/></svg>音を一括切替</button>
+                <button class="btn-danger-ghost" onclick="clearAllPrograms()">
+                    <svg class="icon"><use href="#i-trash"/></svg>全消去</button>
+            </div>
+        </div>
+        <div class="table-wrap">
+            <table class="table-list">
+                <thead>
+                    <tr>
+                        <th style="width: 44px;">#</th>
+                        <th style="width: 150px;">時間帯 / 所要</th>
+                        <th>プログラム名</th>
+                        <th style="width: 200px; text-align: center;">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="timetable-body">
+                </tbody>
+            </table>
+        </div>
     </div>
 
-    <div class="card">
-        <h3 style="color:#888; font-size:1rem; margin-top:0;">📋 新しいプログラムを追加 (末尾)</h3>
+    <div class="card" id="add-form-card">
+        <h3 class="card-heading"><svg class="icon"><use href="#i-plus"/></svg>新しいプログラムを追加 (末尾)</h3>
         <div class="form-row">
             <div class="form-group">
                 <label id="label-start" for="input-start">開始時刻</label>
@@ -482,10 +171,10 @@
                 <label for="input-duration">所要時間 (分)</label>
                 <input type="number" id="input-duration" min="1" placeholder="例: 15" oninput="calculateEndTime()">
             </div>
-            <div style="color: #444; margin-top: 20px;">➔</div>
+            <div class="arrow-sep">→</div>
             <div class="form-group">
                 <label for="input-end">終了時刻</label>
-                <input type="time" id="input-end" readonly style="opacity: 0.6; cursor: not-allowed;">
+                <input type="time" id="input-end" readonly class="readonly-input">
             </div>
             <div class="form-group">
                 <label for="input-alert-min">警告 (分前)</label>
@@ -493,9 +182,10 @@
             </div>
             <div class="form-group flex-grow">
                 <label for="input-title">プログラム名</label>
-                <input type="text" id="input-title" placeholder="例: パネルディスタッション">
+                <input type="text" id="input-title" placeholder="例: パネルディスカッション">
             </div>
-            <button id="btn-submit" onclick="submitFormItem()" style="margin-top: 20px;">追加する</button>
+            <button id="btn-submit" class="btn-primary form-submit" onclick="submitFormItem()">
+                <svg class="icon"><use href="#i-plus"/></svg>追加する</button>
         </div>
     </div>
 </div>
@@ -504,1163 +194,39 @@
 <div id="share-modal" class="modal-overlay">
     <div class="modal-content">
         <div class="modal-header">
-            <h3>🔗 スケジュールの共有と入出力</h3>
-            <button onclick="closeShareModal()" style="padding:4px 8px;">✕</button>
+            <h3><svg class="icon"><use href="#i-share"/></svg>スケジュールの共有と入出力</h3>
+            <button class="icon-btn" onclick="closeShareModal()"><svg class="icon"><use href="#i-x"/></svg></button>
         </div>
-        
+
         <div class="modal-section">
             <h4>1. URL / QRコードで共有 (現在のスケジュール)</h4>
-            <p style="font-size:0.8rem; color:#888; margin-bottom:8px;">表示中のスケジュールを他の端末へ瞬時に共有します。</p>
-            <button onclick="copyShareUrl()" style="width:100%; margin-bottom:10px; background:#1b4332; color:#fff;">📋 共有用URLをコピー</button>
+            <p class="modal-note">表示中のスケジュールを他の端末へ瞬時に共有します。</p>
+            <button class="btn-primary modal-wide-btn" onclick="copyShareUrl()">
+                <svg class="icon"><use href="#i-link"/></svg>共有用URLをコピー</button>
+            <button class="btn-accent modal-wide-btn" onclick="copyViewerUrl()"
+                title="編集UIのない表示専用画面を開くURL。会場のモニター用に">
+                <svg class="icon"><use href="#i-monitor"/></svg>閲覧専用URLをコピー (会場モニター用)</button>
             <div id="qrcode-box" class="qr-container"></div>
         </div>
 
-        <div class="modal-section" style="border-top:1px dashed #333; padding-top:15px;">
+        <div class="modal-section modal-section-divided">
             <h4>2. JSONファイルでバックアップ / 復元</h4>
-            <p style="font-size:0.8rem; color:#888; margin-bottom:8px;">全保存データをファイルに出力、または復元します。</p>
-            <div style="display:flex; gap:10px;">
-                <button onclick="exportToJsonFile()" style="flex:1;">💾 保存データを書き出し</button>
-                <button onclick="document.getElementById('import-file-input').click()" style="flex:1;">📂 ファイルから読み込み</button>
+            <p class="modal-note">全保存データをファイルに出力、または復元します。</p>
+            <div class="modal-btn-row">
+                <button onclick="exportToJsonFile()"><svg class="icon"><use href="#i-download"/></svg>保存データを書き出し</button>
+                <button onclick="document.getElementById('import-file-input').click()"><svg class="icon"><use href="#i-upload"/></svg>ファイルから読み込み</button>
                 <input type="file" id="import-file-input" accept=".json" style="display:none;" onchange="importFromJsonFile(event)">
             </div>
         </div>
     </div>
 </div>
 
-<script>
-    let baseStartTimeStr = "08:00"; 
-    let timetableRaw = [];
-    
-    let timetableParsed = [];
-    let currentIndex = -1;
-    let editTargetIndex = -1; 
-    let insertTargetIndex = -1; 
-    let timeLeft = 0; 
-    let timerInterval = null;
-    let isPaused = false;
-    let dayOffset = 0; 
-    let pauseStartTime = null; 
-
-    let mouseTimer = null;
-    let qrCodeObj = null;
-
-    const defaultSampleData = {
-        baseStartTimeStr: "07:30",
-        timetableRaw: [
-            { duration: 48, title: "登校", sound: false, alertMin: 2 },
-            { duration: 7, title: "朝学習", sound: false, alertMin: 0 },
-            { duration: 5, title: "朝会", sound: false, alertMin: 0 },
-            { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
-            { duration: 50, title: "1時間目", sound: false, alertMin: 0 },
-            { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
-            { duration: 50, title: "2時間目", sound: false, alertMin: 0 },
-            { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
-            { duration: 50, title: "3時間目", sound: false, alertMin: 0 },
-            { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
-            { duration: 50, title: "4時間目", sound: false, alertMin: 0 },
-            { duration: 40, title: "給食", sound: false, alertMin: 0 },
-            { duration: 30, title: "昼休み", sound: false, alertMin: 2 },
-            { duration: 50, title: "5時間目", sound: false, alertMin: 0 },
-            { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
-            { duration: 50, title: "6時間目", sound: false, alertMin: 0 },
-            { duration: 5, title: "休み時間", sound: false, alertMin: 2 },
-            { duration: 10, title: "帰会", sound: false, alertMin: 0 }
-        ]
-    };
-
-    const defaultPresetTimetables = {
-        "6時間｜清掃なし": {
-            baseStartTimeStr: "07:30",
-            timetableRaw: [
-                { duration: 48, title: "登校", sound: false, alertMin: 2 },
-                { duration: 7, title: "朝学習", sound: false, alertMin: 0 },
-                { duration: 5, title: "朝会", sound: false, alertMin: 0 },
-                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
-                { duration: 50, title: "1時間目", sound: false, alertMin: 0 },
-                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
-                { duration: 50, title: "2時間目", sound: false, alertMin: 0 },
-                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
-                { duration: 50, title: "3時間目", sound: false, alertMin: 0 },
-                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
-                { duration: 50, title: "4時間目", sound: false, alertMin: 0 },
-                { duration: 40, title: "給食", sound: false, alertMin: 0 },
-                { duration: 30, title: "昼休み", sound: false, alertMin: 2 },
-                { duration: 50, title: "5時間目", sound: false, alertMin: 0 },
-                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
-                { duration: 50, title: "6時間目", sound: false, alertMin: 0 },
-                { duration: 5, title: "休み時間", sound: false, alertMin: 2 },
-                { duration: 10, title: "帰会", sound: false, alertMin: 0 }
-            ]
-        },
-        "6時間｜清掃あり": {
-            baseStartTimeStr: "07:30",
-            timetableRaw: [
-                { duration: 48, title: "登校", sound: false, alertMin: 2 },
-                { duration: 7, title: "朝学習", sound: false, alertMin: 0 },
-                { duration: 5, title: "朝会", sound: false, alertMin: 0 },
-                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
-                { duration: 50, title: "1時間目", sound: false, alertMin: 0 },
-                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
-                { duration: 50, title: "2時間目", sound: false, alertMin: 0 },
-                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
-                { duration: 50, title: "3時間目", sound: false, alertMin: 0 },
-                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
-                { duration: 50, title: "4時間目", sound: false, alertMin: 0 },
-                { duration: 40, title: "給食", sound: false, alertMin: 0 },
-                { duration: 25, title: "昼休み", sound: false, alertMin: 2 },
-                { duration: 50, title: "5時間目", sound: false, alertMin: 0 },
-                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
-                { duration: 50, title: "6時間目", sound: false, alertMin: 0 },
-                { duration: 7, title: "休み時間", sound: false, alertMin: 2 },
-                { duration: 10, title: "清掃", sound: false, alertMin: 0 },
-                { duration: 8, title: "休み時間", sound: false, alertMin: 2 },
-                { duration: 10, title: "帰会", sound: false, alertMin: 0 }
-            ]
-        },
-        "6時間｜諸活動あり": {
-            baseStartTimeStr: "07:30",
-            timetableRaw: [
-                { duration: 48, title: "登校", sound: false, alertMin: 2 },
-                { duration: 7, title: "朝学習", sound: false, alertMin: 0 },
-                { duration: 5, title: "朝会", sound: false, alertMin: 0 },
-                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
-                { duration: 50, title: "1時間目", sound: false, alertMin: 0 },
-                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
-                { duration: 50, title: "2時間目", sound: false, alertMin: 0 },
-                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
-                { duration: 50, title: "3時間目", sound: false, alertMin: 0 },
-                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
-                { duration: 50, title: "4時間目", sound: false, alertMin: 0 },
-                { duration: 40, title: "給食", sound: false, alertMin: 0 },
-                { duration: 25, title: "昼休み", sound: false, alertMin: 2 },
-                { duration: 50, title: "5時間目", sound: false, alertMin: 0 },
-                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
-                { duration: 50, title: "6時間目", sound: false, alertMin: 0 },
-                { duration: 5, title: "休み時間", sound: false, alertMin: 2 },
-                { duration: 20, title: "諸活動", sound: false, alertMin: 0 },
-                { duration: 5, title: "休み時間", sound: false, alertMin: 2 },
-                { duration: 10, title: "帰会", sound: false, alertMin: 0 }
-            ]
-        },
-        "5時間": {
-            baseStartTimeStr: "07:30",
-            timetableRaw: [
-                { duration: 48, title: "登校", sound: false, alertMin: 2 },
-                { duration: 7, title: "朝学習", sound: false, alertMin: 0 },
-                { duration: 5, title: "朝会", sound: false, alertMin: 0 },
-                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
-                { duration: 50, title: "1時間目", sound: false, alertMin: 0 },
-                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
-                { duration: 50, title: "2時間目", sound: false, alertMin: 0 },
-                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
-                { duration: 50, title: "3時間目", sound: false, alertMin: 0 },
-                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
-                { duration: 50, title: "4時間目", sound: false, alertMin: 0 },
-                { duration: 40, title: "給食", sound: false, alertMin: 0 },
-                { duration: 30, title: "昼休み", sound: false, alertMin: 2 },
-                { duration: 50, title: "5時間目", sound: false, alertMin: 0 },
-                { duration: 5, title: "休み時間", sound: false, alertMin: 2 },
-                { duration: 10, title: "帰会", sound: false, alertMin: 0 }
-            ]
-        },
-        "6時間｜45分授業": {
-            baseStartTimeStr: "07:30",
-            timetableRaw: [
-                { duration: 48, title: "登校", sound: false, alertMin: 2 },
-                { duration: 7, title: "朝学習", sound: false, alertMin: 0 },
-                { duration: 5, title: "朝会", sound: false, alertMin: 0 },
-                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
-                { duration: 45, title: "1時間目", sound: false, alertMin: 0 },
-                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
-                { duration: 45, title: "2時間目", sound: false, alertMin: 0 },
-                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
-                { duration: 45, title: "3時間目", sound: false, alertMin: 0 },
-                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
-                { duration: 45, title: "4時間目", sound: false, alertMin: 0 },
-                { duration: 40, title: "給食", sound: false, alertMin: 0 },
-                { duration: 30, title: "昼休み", sound: false, alertMin: 2 },
-                { duration: 45, title: "5時間目", sound: false, alertMin: 0 },
-                { duration: 10, title: "休み時間", sound: false, alertMin: 2 },
-                { duration: 45, title: "6時間目", sound: false, alertMin: 0 },
-                { duration: 5, title: "休み時間", sound: false, alertMin: 2 },
-                { duration: 10, title: "帰会", sound: false, alertMin: 0 }
-            ]
-        }
-    };
-
-    let audioCtx = null;
-    function initAudio() {
-        if (!audioCtx) {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        if (audioCtx && audioCtx.state === 'suspended') {
-            audioCtx.resume();
-        }
-    }
-
-    function playBeep() {
-        if (!audioCtx) return;
-        try {
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(880, audioCtx.currentTime); 
-            gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.5); 
-        } catch(e) {
-            console.log("Audio play error:", e);
-        }
-    }
-
-    function updateClock() {
-        const now = new Date();
-        if (timetableParsed.length > 0 && timerInterval && !isPaused) {
-            checkAndSyncTime(now);
-        } else {
-            updateDisplayOnly();
-        }
-    }
-    setInterval(updateClock, 1000);
-    updateClock(); 
-
-    function resetMouseTimer() {
-        const timerArea = document.getElementById('timer-area');
-        if (!timerArea.classList.contains('ios-fullscreen')) return;
-
-        timerArea.classList.remove('hide-cursor');
-
-        if (mouseTimer) clearTimeout(mouseTimer);
-
-        mouseTimer = setTimeout(() => {
-            if (timerArea.classList.contains('ios-fullscreen')) {
-                timerArea.classList.add('hide-cursor');
-            }
-        }, 2500);
-    }
-
-    document.addEventListener('mousemove', resetMouseTimer);
-
-    function toggleFullscreen() {
-        const timerArea = document.getElementById('timer-area');
-        const btn = document.querySelector('.fullscreen-btn');
-        
-        if (timerArea.classList.contains('ios-fullscreen')) {
-            timerArea.classList.remove('ios-fullscreen');
-            timerArea.classList.remove('hide-cursor');
-            if (mouseTimer) clearTimeout(mouseTimer);
-            btn.textContent = "🗖 全画面化";
-        } else {
-            timerArea.classList.add('ios-fullscreen');
-            btn.textContent = "✕ 閉じる";
-            initAudio(); 
-            resetMouseTimer();
-        }
-    }
-
-    function refreshTimetableStructure(keepTimerAlive = false, previousActiveTitle = null, skipBackup = false) {
-        if (!baseStartTimeStr) baseStartTimeStr = "08:00";
-        
-        let now = new Date();
-        let currentTrackDate = timeStringToDate(baseStartTimeStr, 0); 
-        
-        let totalMinutes = 0;
-        timetableRaw.forEach(item => totalMinutes += item.duration);
-        let scheduleEndDate = new Date(currentTrackDate.getTime() + totalMinutes * 60 * 1000);
-
-        dayOffset = (now >= scheduleEndDate) ? 1 : 0;
-
-        currentTrackDate = timeStringToDate(baseStartTimeStr, dayOffset);
-
-        timetableParsed = timetableRaw.map(item => {
-            let start = new Date(currentTrackDate.getTime());
-            let end = new Date(start.getTime() + item.duration * 60 * 1000);
-            currentTrackDate = end; 
-
-            return {
-                start: start,
-                end: end,
-                title: item.title,
-                startStr: dateToTimeString(start),
-                endStr: dateToTimeString(end),
-                sound: item.sound !== undefined ? item.sound : true,
-                alertMin: item.alertMin !== undefined ? item.alertMin : 0
-            };
-        });
-
-        setupNextFormPlaceholder();
-
-        if ((keepTimerAlive === true || keepTimerAlive === "force") && previousActiveTitle !== null) {
-            const newIdx = timetableParsed.findIndex(item => item.title === previousActiveTitle);
-            if (newIdx !== -1) {
-                currentIndex = newIdx; 
-                updateDisplayOnly();
-                renderTimetableList();
-                return; 
-            }
-        }
-
-        autoSelectCurrentIndex();
-        
-        if (keepTimerAlive === "force") {
-            updateDisplayOnly();
-        } else if (!keepTimerAlive) {
-            resetTimer();
-        } else {
-            updateDisplayOnly();
-        }
-
-        if (!skipBackup) {
-            saveAutoBackup();
-        }
-        
-        renderTimetableList();
-    }
-
-    function addMinutesToTimeStr(timeStr, minsToAdd) {
-        if (!timeStr) return "";
-        const parts = timeStr.split(':');
-        let hours = parseInt(parts[0], 10);
-        let minutes = parseInt(parts[1], 10);
-        minutes += minsToAdd;
-        hours += Math.floor(minutes / 60);
-        minutes = minutes % 60;
-        hours = hours % 24;
-        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-    }
-
-    function dateToTimeString(dateObj) {
-        const h = dateObj.getHours().toString().padStart(2, '0');
-        const m = dateObj.getMinutes().toString().padStart(2, '0');
-        return `${h}:${m}`;
-    }
-
-    function formatTimeLeftString(totalSeconds) {
-        const hours = Math.floor(totalSeconds / 3600);
-        const mins = Math.floor((totalSeconds % 3600) / 60);
-        const secs = totalSeconds % 60;
-
-        if (hours > 0) {
-            return `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-        } else {
-            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-        }
-    }
-
-    function getHMSClockHTML() {
-        const now = new Date();
-        const hours = now.getHours().toString().padStart(2, '0');
-        const minutes = now.getMinutes().toString().padStart(2, '0');
-        const seconds = now.getSeconds().toString().padStart(2, '0');
-        return `${hours}:${minutes}<span class="sec-red">:${seconds}</span>`;
-    }
-
-    function calculateEndTime() {
-        const startVal = document.getElementById('input-start').value;
-        const durationVal = parseInt(document.getElementById('input-duration').value, 10);
-
-        if (!startVal || isNaN(durationVal) || durationVal <= 0) {
-            document.getElementById('input-end').value = '';
-            return;
-        }
-        document.getElementById('input-end').value = addMinutesToTimeStr(startVal, durationVal);
-    }
-
-    function onStartTimeInput() {
-        if (timetableRaw.length === 0) {
-            baseStartTimeStr = document.getElementById('input-start').value || "08:00";
-        }
-        calculateEndTime();
-    }
-
-    function setupNextFormPlaceholder() {
-        if (timetableRaw.length === 0) {
-            if (!baseStartTimeStr) baseStartTimeStr = "08:00";
-            document.getElementById('input-start').value = baseStartTimeStr;
-            document.getElementById('input-start').disabled = false;
-        } else {
-            if(timetableParsed.length > 0) {
-                const lastItem = timetableParsed[timetableParsed.length - 1];
-                document.getElementById('input-start').value = lastItem.endStr;
-            }
-            document.getElementById('input-start').disabled = true;
-        }
-        calculateEndTime();
-    }
-
-    function timeStringToDate(timeStr, offsetDays = 0) {
-        const now = new Date();
-        const parts = timeStr.split(':');
-        if (parts.length < 2) return null;
-        return new Date(now.getFullYear(), now.getMonth(), now.getDate() + offsetDays, parseInt(parts[0], 10), parseInt(parts[1], 10), 0, 0);
-    }
-
-    function submitFormItem() {
-        const duration = parseInt(document.getElementById('input-duration').value, 10);
-        const title = document.getElementById('input-title').value.trim();
-        let alertMin = parseInt(document.getElementById('input-alert-min').value, 10);
-        if (isNaN(alertMin) || alertMin < 0) alertMin = 0;
-
-        if (isNaN(duration) || duration <= 0 || !title) {
-            alert('所要時間とプログラム名を正しく入力してください。');
-            return;
-        }
-
-        const wasRunning = (timerInterval !== null);
-        const activeTitleBefore = (currentIndex >= 0 && timetableParsed[currentIndex]) ? timetableParsed[currentIndex].title : null;
-
-        if (timetableRaw.length === 0) {
-            baseStartTimeStr = document.getElementById('input-start').value || "08:00";
-        }
-        timetableRaw.push({ duration, title, sound: false, alertMin });
-        
-        document.getElementById('schedule-name').textContent = 'カスタム編集';
-        
-        clearForm();
-        refreshTimetableStructure(wasRunning ? true : "force", activeTitleBefore);
-    }
-
-    function editProgramItem(index) {
-        insertTargetIndex = -1; 
-        editTargetIndex = index;
-        renderTimetableList();
-    }
-
-    function saveInlineEdit(index) {
-        const row = document.getElementById(`row-${index}`);
-        const newTitle = row.querySelector('.inline-title-input').value.trim();
-        const newDuration = parseInt(row.querySelector('.inline-duration-input').value, 10);
-        
-        let newStartStr = null;
-        if (index === 0) {
-            newStartStr = row.querySelector('.inline-start-input').value;
-        }
-
-        if (!newTitle || isNaN(newDuration) || newDuration <= 0) {
-            alert('有効なプログラム名と所要時間を入力してください。');
-            return;
-        }
-
-        if (index === 0 && newStartStr) {
-            baseStartTimeStr = newStartStr;
-        }
-
-        timetableRaw[index].title = newTitle;
-        timetableRaw[index].duration = newDuration;
-
-        const activeTitleBefore = (currentIndex >= 0 && timetableParsed[currentIndex]) ? timetableParsed[currentIndex].title : null;
-        
-        document.getElementById('schedule-name').textContent = 'カスタム編集';
-        editTargetIndex = -1;
-        refreshTimetableStructure("force", activeTitleBefore);
-    }
-
-    function prepareInsertItem(index) {
-        editTargetIndex = -1; 
-        insertTargetIndex = index;
-        renderTimetableList();
-    }
-
-    function saveInlineInsert(index) {
-        const row = document.getElementById(`insert-row-${index}`);
-        const title = row.querySelector('.inline-insert-title').value.trim();
-        const duration = parseInt(row.querySelector('.inline-insert-duration').value, 10);
-        let alertMin = parseInt(row.querySelector('.inline-insert-alert').value, 10);
-        if (isNaN(alertMin) || alertMin < 0) alertMin = 0;
-
-        if (!title || isNaN(duration) || duration <= 0) {
-            alert('プログラム名と所要時間を正しく入力してください。');
-            return;
-        }
-
-        const activeTitleBefore = (currentIndex >= 0 && timetableParsed[currentIndex]) ? timetableParsed[currentIndex].title : null;
-
-        timetableRaw.splice(index + 1, 0, { duration, title, sound: false, alertMin });
-        
-        document.getElementById('schedule-name').textContent = 'カスタム編集';
-        insertTargetIndex = -1;
-        refreshTimetableStructure("force", activeTitleBefore);
-    }
-
-    function changeInlineAlertMin(index, val) {
-        let minutes = parseInt(val, 10);
-        if (isNaN(minutes) || minutes < 0) minutes = 0;
-        
-        timetableRaw[index].alertMin = minutes;
-        
-        const wasRunning = (timerInterval !== null);
-        if (!wasRunning) {
-            saveAutoBackup();
-        }
-    }
-
-    function clearForm() {
-        document.getElementById('input-duration').value = '';
-        document.getElementById('input-title').value = '';
-        document.getElementById('input-end').value = '';
-        document.getElementById('input-alert-min').value = '0';
-    }
-
-    function deleteProgramItem(index) {
-        if (editTargetIndex === index) editTargetIndex = -1;
-        if (insertTargetIndex === index) insertTargetIndex = -1;
-        const wasRunning = (timerInterval !== null);
-        const activeTitleBefore = (currentIndex >= 0 && timetableParsed[currentIndex]) ? timetableParsed[currentIndex].title : null;
-        
-        timetableRaw.splice(index, 1);
-        document.getElementById('schedule-name').textContent = 'カスタム編集';
-        refreshTimetableStructure(wasRunning ? true : "force", activeTitleBefore);
-    }
-
-    function moveProgramItem(index, direction) {
-        const newIndex = index + direction;
-        if (newIndex < 0 || newIndex >= timetableRaw.length) return;
-
-        const temp = timetableRaw[index];
-        timetableRaw[index] = timetableRaw[newIndex];
-        timetableRaw[newIndex] = temp;
-
-        document.getElementById('schedule-name').textContent = 'カスタム編集';
-        refreshTimetableStructure("force", null);
-    }
-
-    function toggleSoundItem(index) {
-        if (timetableRaw[index].sound === undefined) {
-            timetableRaw[index].sound = true;
-        }
-        timetableRaw[index].sound = !timetableRaw[index].sound;
-        timetableParsed[index].sound = timetableRaw[index].sound;
-        
-        const btn = document.querySelector(`#row-${index} .btn-sound`);
-        if (btn) {
-            const isSoundOn = timetableRaw[index].sound;
-            btn.className = 'btn-sound sound-on';
-            btn.title = isSoundOn ? '音をミュートする' : '音を鳴らす';
-            btn.textContent = isSoundOn ? '🔊' : '🔇';
-        }
-        saveAutoBackup();
-    }
-
-    function autoSelectCurrentIndex() {
-        if (timetableParsed.length === 0) {
-            currentIndex = -1;
-            return;
-        }
-        const now = new Date();
-        const oldIndex = currentIndex;
-        currentIndex = -1; 
-        
-        for (let i = 0; i < timetableParsed.length; i++) {
-            if (now >= timetableParsed[i].start && now < timetableParsed[i].end) {
-                currentIndex = i;
-                break;
-            }
-        }
-        
-        if (currentIndex === -1 && timetableParsed.length > 0 && now < timetableParsed[0].start) {
-            currentIndex = -1;
-        }
-
-        if (oldIndex !== currentIndex && editTargetIndex === -1 && insertTargetIndex === -1) {
-            for (let i = 0; i < timetableParsed.length; i++) {
-                const row = document.getElementById(`row-${i}`);
-                if (row) {
-                    if (i === currentIndex) {
-                        row.classList.add('active-row');
-                    } else {
-                        row.classList.remove('active-row');
-                    }
-                }
-            }
-        }
-    }
-
-    function renderTimetableList() {
-        const tbody = document.getElementById('timetable-body');
-        tbody.innerHTML = '';
-
-        if (timetableParsed.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#555;">スケジュールが登録されていません</td></tr>`;
-            return;
-        }
-
-        timetableParsed.forEach((item, index) => {
-            const row = document.createElement('tr');
-            row.id = `row-${index}`;
-            if (index === currentIndex) row.className = 'active-row';
-            
-            const isSoundOn = item.sound;
-            const soundBtnClass = isSoundOn ? 'btn-sound sound-on' : 'btn-sound sound-off';
-            const soundBtnIcon = isSoundOn ? '🔊' : '🔇';
-
-            let itemDateLabel = "";
-            let today = new Date();
-            if (item.start.getDate() !== today.getDate()) {
-                itemDateLabel = `<span style="color:#00ffff; font-size:0.75rem; margin-right:4px;">(翌日)</span>`;
-            }
-
-            const alertVal = item.alertMin !== undefined ? item.alertMin : 0;
-
-            if (index === editTargetIndex) {
-                const startInputHTML = index === 0 
-                    ? `<input type="time" class="inline-edit-input inline-start-input" value="${baseStartTimeStr}">`
-                    : `<span style="font-size:0.8rem;color:#666;">自動連動</span>`;
-
-                row.innerHTML = `
-                    <td>${index + 1}</td>
-                    <td>
-                        ${startInputHTML}
-                        <div style="margin-top:5px; display:flex; align-items:center; gap:3px;">
-                            <input type="number" class="inline-edit-input inline-edit-num inline-duration-input" min="1" value="${timetableRaw[index].duration}">分
-                        </div>
-                    </td>
-                    <td>
-                        <input type="text" class="inline-edit-input inline-title-input" value="${item.title}">
-                    </td>
-                    <td style="text-align: center; display: flex; gap: 4px; justify-content: center; align-items: center; flex-wrap: wrap;">
-                        <button onclick="saveInlineEdit(${index})" style="background:#004d00; color:#fff; width: 80px;">保存</button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            } else {
-                row.innerHTML = `
-                    <td>${index + 1}</td>
-                    <td class="time-range-cell">${itemDateLabel}${item.startStr} 〜 ${item.endStr}<br><span style="color:#555; font-size:0.8rem;">(${timetableRaw[index].duration}分)</span></td>
-                    <td>${item.title}</td>
-                    <td style="text-align: center; display: flex; gap: 4px; justify-content: center; align-items: center; flex-wrap: wrap;">
-                        <button onclick="moveProgramItem(${index}, -1)" ${index === 0 ? "disabled" : ""}>↑</button>
-                        <button onclick="moveProgramItem(${index}, 1)" ${index === timetableParsed.length - 1 ? "disabled" : ""}>↓</button>
-                        <button class="${soundBtnClass}" onclick="toggleSoundItem(${index})" title="${isSoundOn ? '音をミュートする' : '音を鳴らす'}">${soundBtnIcon}</button>
-                        
-                        <div style="display: flex; align-items: center; background:#161616; border:1px solid var(--table-border); padding:2px 4px; border-radius:4px; font-size:0.8rem; color:#888;">
-                            ⚠️<input type="number" class="inline-alert-input" min="0" value="${alertVal}" onchange="changeInlineAlertMin(${index}, this.value)">分前
-                        </div>
-
-                        <button class="btn-edit" onclick="editProgramItem(${index})">編集</button>
-                        <button class="btn-edit" onclick="prepareInsertItem(${index})" title="このプログラムの後ろに挿入">＋</button>
-                        <button class="btn-delete" onclick="deleteProgramItem(${index})">削除</button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            }
-
-            if (index === insertTargetIndex) {
-                const insertRow = document.createElement('tr');
-                insertRow.id = `insert-row-${index}`;
-                insertRow.className = 'insert-row';
-                insertRow.innerHTML = `
-                    <td>＋</td>
-                    <td>
-                        <span style="font-size:0.8rem;color:#888;">開始：自動連動</span>
-                        <div style="margin-top:5px; display:flex; align-items:center; gap:3px;">
-                            <input type="number" class="inline-edit-input inline-edit-num inline-insert-duration" min="1" placeholder="分" value="15">分
-                        </div>
-                    </td>
-                    <td>
-                        <input type="text" class="inline-edit-input inline-insert-title" placeholder="挿入するプログラム名を入力...">
-                        <div style="margin-top:5px; display:flex; align-items:center; gap:4px; font-size:0.8rem; color:#666;">
-                            ⚠️警告: <input type="number" class="inline-edit-input inline-edit-num inline-insert-alert" min="0" value="0"> 分前
-                        </div>
-                    </td>
-                    <td style="text-align: center; display: flex; gap: 4px; justify-content: center; align-items: center; flex-wrap: wrap;">
-                        <button onclick="saveInlineInsert(${index})" style="background:#005580; color:#fff; width: 100px;">ここに挿入</button>
-                    </td>
-                `;
-                tbody.appendChild(insertRow);
-            }
-        });
-    }
-
-    function updateTimetableCellsOnly() {
-        if (editTargetIndex !== -1 || insertTargetIndex !== -1) return; 
-        
-        let now = new Date();
-        timetableParsed.forEach((item, index) => {
-            const row = document.getElementById(`row-${index}`);
-            if (row) {
-                const cell = row.querySelector('.time-range-cell');
-                if (cell) {
-                    let itemDateLabel = (item.start.getDate() !== now.getDate()) ? `<span style="color:#00ffff; font-size:0.75rem; margin-right:4px;">(翌日)</span>` : "";
-                    cell.innerHTML = `${itemDateLabel}${item.startStr} 〜 ${item.endStr}<br><span style="color:#555; font-size:0.8rem;">(${timetableRaw[index].duration}分)</span>`;
-                }
-            }
-        });
-        setupNextFormPlaceholder(); 
-    }
-
-    function checkAndSyncTime(now) {
-        if (timetableParsed.length === 0) return;
-
-        if (currentIndex === -1) {
-            const firstProgramStart = timetableParsed[0].start;
-            if (now >= firstProgramStart) {
-                currentIndex = 0;
-                updateTimetableCellsOnly();
-            } else {
-                updateDisplayOnly();
-                return;
-            }
-        }
-
-        const current = timetableParsed[currentIndex];
-        if (now >= current.end) {
-            if (current.sound) {
-                playBeep();
-            }
-            autoSelectCurrentIndex();
-            
-            if (currentIndex === -1) {
-                const totalEnd = timetableParsed[timetableParsed.length - 1].end;
-                if (now >= totalEnd) {
-                    refreshTimetableStructure(true, null);
-                    return;
-                }
-            }
-            updateTimetableCellsOnly();
-        }
-
-        if (currentIndex >= 0) {
-            const targetEnd = timetableParsed[currentIndex].end;
-            const diffMs = targetEnd - now;
-            timeLeft = Math.max(0, Math.floor(diffMs / 1000));
-        }
-
-        updateDisplayOnly();
-    }
-
-    function updateDisplayOnly() {
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = now.getMonth() + 1;
-        const date = now.getDate();
-        const week = ["日", "月", "火", "水", "木", "金", "土"];
-        const day = week[now.getDay()];
-        const hours = now.getHours().toString().padStart(2, '0');
-        const minutes = now.getMinutes().toString().padStart(2, '0');
-
-        const topInfoEl = document.getElementById('top-info');
-        const timeLeftEl = document.getElementById('time-left');
-        const controlsZone = document.getElementById('timer-controls-zone');
-
-        timeLeftEl.classList.remove('alert-mode');
-
-        const isWaiting = (currentIndex === -1 || (timetableParsed.length > 0 && now < timetableParsed[0].start));
-
-        if (isWaiting && timetableParsed.length > 0) {
-            const nextFirst = timetableParsed[0];
-            
-            topInfoEl.textContent = `${year}/${month}/${date}(${day})`;
-            
-            document.getElementById('current-title').textContent = '';
-            timeLeftEl.innerHTML = getHMSClockHTML();
-            
-            document.getElementById('next-title').textContent = `開始予定：${nextFirst.startStr}〜`;
-            
-            controlsZone.style.display = 'none';
-            return;
-        }
-
-        if (timetableParsed.length === 0 || currentIndex < 0) {
-            topInfoEl.textContent = '';
-            document.getElementById('current-title').textContent = 'プログラムが登録されていません';
-            timeLeftEl.textContent = '00:00';
-            document.getElementById('next-title').textContent = '次：--';
-            controlsZone.style.display = 'none';
-            return;
-        }
-
-        controlsZone.style.display = 'flex';
-
-        topInfoEl.textContent = `${year}/${month}/${date}(${day}) ${hours}:${minutes}`;
-        const current = timetableParsed[currentIndex];
-        
-        document.getElementById('current-title').textContent = current.title;
-        timeLeftEl.textContent = formatTimeLeftString(timeLeft);
-        
-        const alertSeconds = (current.alertMin !== undefined ? current.alertMin : 0) * 60;
-        if (timeLeft <= alertSeconds && alertSeconds > 0) {
-            timeLeftEl.classList.add('alert-mode');
-        }
-        
-        const next = timetableParsed[currentIndex + 1];
-        document.getElementById('next-title').textContent = next ? `次：${next.title} (${next.startStr}〜)` : '次：なし（終了後に翌日ループ）';
-
-        document.getElementById('btn-start').disabled = (timerInterval !== null);
-        document.getElementById('btn-pause').disabled = (timerInterval === null);
-    }
-
-    function startTimer() {
-        if (timetableParsed.length === 0) return;
-        initAudio(); 
-
-        if (isPaused && pauseStartTime) {
-            const pausedDurationMs = Date.now() - pauseStartTime;
-            
-            timetableParsed = timetableParsed.map(item => {
-                const newStart = new Date(item.start.getTime() + pausedDurationMs);
-                const newEnd = new Date(item.end.getTime() + pausedDurationMs);
-
-                return {
-                    ...item,
-                    start: newStart,
-                    end: newEnd,
-                    startStr: dateToTimeString(newStart),
-                    endStr: dateToTimeString(newEnd)
-                };
-            });
-
-            baseStartTimeStr = timetableParsed[0].startStr;
-            pauseStartTime = null; 
-        }
-
-        autoSelectCurrentIndex();
-
-        if (!timerInterval) {
-            isPaused = false;
-            timerInterval = setInterval(() => {
-                if (isPaused) return;
-                updateClock(); 
-            }, 1000);
-        }
-        
-        document.getElementById('btn-start').disabled = true;
-        document.getElementById('btn-pause').disabled = false;
-        updateTimetableCellsOnly();
-    }
-
-    function pauseTimer() {
-        if (timerInterval) {
-            clearInterval(timerInterval);
-            timerInterval = null;
-            isPaused = true;
-            pauseStartTime = Date.now(); 
-            document.getElementById('btn-start').disabled = false;
-            document.getElementById('btn-pause').disabled = true;
-        }
-    }
-
-    function resetTimer() {
-        isPaused = false;
-        pauseStartTime = null;
-        if (timerInterval) {
-            clearInterval(timerInterval);
-            timerInterval = null;
-        }
-        
-        refreshTimetableStructure(true, null, true);
-    }
-
-    function saveTimetableToStorage() {
-        const nameInput = document.getElementById('save-name');
-        const name = nameInput.value.trim();
-        if (!name) {
-            alert('保存名（テンプレート名）を入力してください。');
-            return;
-        }
-
-        let savedData = JSON.parse(localStorage.getItem('saved_timetables') || '{}');
-        savedData[name] = {
-            baseStartTimeStr: baseStartTimeStr,
-            timetableRaw: timetableRaw
-        };
-
-        localStorage.setItem('saved_timetables', JSON.stringify(savedData));
-        
-        document.getElementById('schedule-name').textContent = name;
-        localStorage.setItem('timetable_current_name', name);
-
-        nameInput.value = '';
-        updateLoadSelectOptions();
-        alert(`「${name}」として保存しました！`);
-    }
-
-    function loadTimetableFromStorage() {
-        const select = document.getElementById('load-select');
-        const name = select.value;
-        if (!name) {
-            alert('読み込むスケジュールを選択してください。');
-            return;
-        }
-
-        let savedData = JSON.parse(localStorage.getItem('saved_timetables') || '{}');
-        if (savedData[name]) {
-            pauseTimer();
-            baseStartTimeStr = savedData[name].baseStartTimeStr || "08:00";
-            timetableRaw = savedData[name].timetableRaw || [];
-            
-            timetableRaw = timetableRaw.map(item => {
-                if (item.alertMin === undefined) item.alertMin = 0;
-                return item;
-            });
-
-            isPaused = false;
-            pauseStartTime = null;
-            
-            document.getElementById('schedule-name').textContent = name;
-            localStorage.setItem('timetable_current_name', name);
-            
-            refreshTimetableStructure(true); 
-            startTimer();                   
-        }
-    }
-
-    function deleteTimetableFromStorage() {
-        const select = document.getElementById('load-select');
-        const name = select.value;
-        if (!name) {
-            alert('削除するスケジュールを選択してください。');
-            return;
-        }
-
-        if (confirm(`本当に「${name}」の保存データを削除しますか？`)) {
-            let savedData = JSON.parse(localStorage.getItem('saved_timetables') || '{}');
-            delete savedData[name];
-            localStorage.setItem('saved_timetables', JSON.stringify(savedData));
-            updateLoadSelectOptions();
-            select.value = "";
-            
-            const currentName = localStorage.getItem('timetable_current_name');
-            if (currentName === name) {
-                document.getElementById('schedule-name').textContent = '未選択';
-                localStorage.removeItem('timetable_current_name');
-            }
-        }
-    }
-
-    function updateLoadSelectOptions() {
-        const select = document.getElementById('load-select');
-        select.innerHTML = '<option value="">-- 選択してください --</option>';
-        
-        let savedData = JSON.parse(localStorage.getItem('saved_timetables') || '{}');
-        Object.keys(savedData).forEach(name => {
-            const opt = document.createElement('option');
-            opt.value = name;
-            opt.textContent = name;
-            select.appendChild(opt);
-        });
-    }
-
-    function saveAutoBackup() {
-        const backup = {
-            baseStartTimeStr: baseStartTimeStr,
-            timetableRaw: timetableRaw
-        };
-        localStorage.setItem('timetable_autobackup', JSON.stringify(backup));
-    }
-
-    /* -------------------------------------------------------------
-       📲 モーダル／共有／JSON入出力関連処理
-    ------------------------------------------------------------- */
-    function openShareModal() {
-        document.getElementById('share-modal').classList.add('active');
-        generateQrCode();
-    }
-
-    function closeShareModal() {
-        document.getElementById('share-modal').classList.remove('active');
-    }
-
-    // 日本語テキストを安全に Base64 エンコードする関数
-    function utf8ToBase64(str) {
-        return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (match, p1) => String.fromCharCode('0x' + p1)));
-    }
-
-    // Base64 から日本語テキストをデコードする関数
-    function base64ToUtf8(str) {
-        return decodeURIComponent(Array.prototype.map.call(atob(str), (c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
-    }
-
-    function getShareUrl() {
-        const currentName = document.getElementById('schedule-name').textContent || "共有スケジュール";
-        const shareData = {
-            name: currentName,
-            baseStartTimeStr: baseStartTimeStr,
-            timetableRaw: timetableRaw
-        };
-        const jsonStr = JSON.stringify(shareData);
-        const encodedData = utf8ToBase64(jsonStr);
-        const url = new URL(window.location.href);
-        url.search = ''; 
-        url.searchParams.set('data', encodedData);
-        return url.toString();
-    }
-
-    function copyShareUrl() {
-        const url = getShareUrl();
-        navigator.clipboard.writeText(url).then(() => {
-            alert('共有用URLをクリップボードにコピーしました！');
-        }).catch(err => {
-            alert('コピーに失敗しました: ' + err);
-        });
-    }
-
-    function generateQrCode() {
-        const url = getShareUrl();
-        const qrBox = document.getElementById('qrcode-box');
-        qrBox.innerHTML = '';
-        if (typeof QRCode !== 'undefined') {
-            qrCodeObj = new QRCode(qrBox, {
-                text: url,
-                width: 160,
-                height: 160,
-                colorDark : "#000000",
-                colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.M
-            });
-        }
-    }
-
-    function exportToJsonFile() {
-        const savedData = JSON.parse(localStorage.getItem('saved_timetables') || '{}');
-        const exportObj = {
-            saved_timetables: savedData,
-            current: {
-                name: document.getElementById('schedule-name').textContent,
-                baseStartTimeStr: baseStartTimeStr,
-                timetableRaw: timetableRaw
-            }
-        };
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj, null, 2));
-        const downloadAnchor = document.createElement('a');
-        downloadAnchor.setAttribute("href", dataStr);
-        downloadAnchor.setAttribute("download", `timetable_backup_${new Date().toISOString().slice(0,10)}.json`);
-        document.body.appendChild(downloadAnchor);
-        downloadAnchor.click();
-        downloadAnchor.remove();
-    }
-
-    function importFromJsonFile(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const imported = JSON.parse(e.target.result);
-                if (imported.saved_timetables) {
-                    let savedData = JSON.parse(localStorage.getItem('saved_timetables') || '{}');
-                    Object.assign(savedData, imported.saved_timetables);
-                    localStorage.setItem('saved_timetables', JSON.stringify(savedData));
-                    updateLoadSelectOptions();
-                }
-                if (imported.current) {
-                    pauseTimer();
-                    baseStartTimeStr = imported.current.baseStartTimeStr || "08:00";
-                    timetableRaw = imported.current.timetableRaw || [];
-                    document.getElementById('schedule-name').textContent = imported.current.name || "復元データ";
-                    refreshTimetableStructure(true);
-                    startTimer();
-                }
-                alert('データを正常に読み込みました！');
-                closeShareModal();
-            } catch (err) {
-                alert('JSONファイルの読み込みに失敗しました。形式を確認してください。');
-            }
-        };
-        reader.readAsText(file);
-    }
-
-    function checkUrlShareParams() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const dataParam = urlParams.get('data');
-        if (dataParam) {
-            try {
-                const jsonStr = base64ToUtf8(dataParam);
-                const shareData = JSON.parse(jsonStr);
-                
-                if (shareData && shareData.timetableRaw) {
-                    baseStartTimeStr = shareData.baseStartTimeStr || "08:00";
-                    timetableRaw = shareData.timetableRaw;
-                    const name = shareData.name || "URL共有データ";
-                    
-                    document.getElementById('schedule-name').textContent = name;
-                    
-                    // 保存済みデータにも自動追加
-                    let savedData = JSON.parse(localStorage.getItem('saved_timetables') || '{}');
-                    savedData[name] = {
-                        baseStartTimeStr: baseStartTimeStr,
-                        timetableRaw: timetableRaw
-                    };
-                    localStorage.setItem('saved_timetables', JSON.stringify(savedData));
-                    
-                    // アドレスバーのパラメータを綺麗に消去
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                    return true;
-                }
-            } catch(e) {
-                console.error("共有URLのロード失敗:", e);
-            }
-        }
-        return false;
-    }
-
-    function initLoad() {
-        let savedData = JSON.parse(localStorage.getItem('saved_timetables') || '{}');
-        
-        Object.keys(defaultPresetTimetables).forEach(key => {
-            if (!savedData[key]) {
-                savedData[key] = defaultPresetTimetables[key];
-            }
-        });
-        localStorage.setItem('saved_timetables', JSON.stringify(savedData));
-
-        updateLoadSelectOptions();
-
-        // 1. URL共有パラメータがあるかを優先チェック
-        const loadedFromUrl = checkUrlShareParams();
-
-        if (!loadedFromUrl) {
-            // 2. 自動バックアップがあるかをチェック
-            const checkBackup = localStorage.getItem('timetable_autobackup');
-            let hasValidBackup = false;
-
-            if (checkBackup) {
-                try {
-                    const parsedBackup = JSON.parse(checkBackup);
-                    if (parsedBackup.timetableRaw && parsedBackup.timetableRaw.length > 0) {
-                        baseStartTimeStr = parsedBackup.baseStartTimeStr || "08:00";
-                        timetableRaw = parsedBackup.timetableRaw.map(item => {
-                            if (item.alertMin === undefined) item.alertMin = 0;
-                            return item;
-                        });
-                        hasValidBackup = true;
-                    }
-                } catch(e) {
-                    hasValidBackup = false;
-                }
-            }
-
-            if (!hasValidBackup || timetableRaw.length === 0) {
-                baseStartTimeStr = defaultSampleData.baseStartTimeStr;
-                timetableRaw = JSON.parse(JSON.stringify(defaultSampleData.timetableRaw));
-                document.getElementById('schedule-name').textContent = '6時間｜清掃なし (初期プリセット)';
-            } else {
-                const savedCurrentName = localStorage.getItem('timetable_current_name');
-                if (savedCurrentName) {
-                    document.getElementById('schedule-name').textContent = savedCurrentName;
-                } else {
-                    document.getElementById('schedule-name').textContent = '自動バックアップから復元';
-                }
-            }
-        }
-
-        refreshTimetableStructure(false, null, true);
-        
-        const now = new Date();
-        if (currentIndex === -1 && timetableParsed.length > 0 && now < timetableParsed[0].start) {
-            timeLeft = Math.max(0, Math.floor((timetableParsed[0].start - now) / 1000));
-        } else if (currentIndex >= 0) {
-            timeLeft = Math.max(0, Math.floor((timetableParsed[currentIndex].end - now) / 1000));
-        }
-
-        updateDisplayOnly();
-        startTimer();
-    }
-
-    initLoad();
-</script>
-
+<!-- 通知トースト (削除の取り消しなど) -->
+<div id="toast" class="toast">
+    <span id="toast-msg"></span>
+    <button id="toast-action" style="display:none;"></button>
+</div>
+
+<script src="app.js"></script>
 </body>
 </html>
